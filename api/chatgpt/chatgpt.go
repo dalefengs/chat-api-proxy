@@ -21,7 +21,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage("error", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
