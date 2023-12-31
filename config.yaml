@@ -1,0 +1,25 @@
+system:
+  env: public
+  port: 8888
+  router-prefix: "" # 路由前缀
+
+zap:
+  level: info
+  prefix: '[chat-api-reverse]'
+  format: console
+  director: log
+  encode-level: LowercaseColorLevelEncoder
+  stacktrace-key: stacktrace
+  max-age: 0
+  show-line: true
+  log-in-console: true
+
+copilot:
+  tokenUrl: https://api.github.com/copilot_internal/v2/token
+  cotokenUrl: https://api.cocopilot.org/copilot_internal/v2/tokenz
+  completionsUrl: https://api.githubcopilot.com/chat/completions
+
+openai:
+  baseUrl: https://chat.fungs.cn/proxy520
+
+
