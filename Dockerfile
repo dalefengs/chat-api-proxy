@@ -1,6 +1,6 @@
 FROM golang:alpine as builder
 
-WORKDIR /go/src/chat-api-reverse
+WORKDIR /build
 COPY . .
 
 RUN go env -w GO111MODULE=on \
@@ -14,10 +14,10 @@ FROM alpine:latest
 
 LABEL MAINTAINER="dalefengs@gmail.com"
 
-WORKDIR /go/src/chat-api-reverse
+WORKDIR /app
 
-COPY --from=0 /go/src/chat-api-reverse/server ./
-COPY --from=0 /go/src/chat-api-reverse/server/config.docker.yaml ./
+COPY --from=0 /app/server ./
+COPY --from=0 /app/config.docker.yaml ./
 
-EXPOSE 8888
+EXPOSE 8818
 ENTRYPOINT ./server -c config.docker.yaml
