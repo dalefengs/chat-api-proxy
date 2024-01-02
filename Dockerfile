@@ -10,14 +10,14 @@ RUN go env -w GO111MODULE=on \
     && go mod tidy \
     && go build -o server .
 
-FROM alpine:latest
+FROM ubuntu:22.04
 
 LABEL MAINTAINER="dalefengs@gmail.com"
 
 WORKDIR /app
 
-COPY --from=0 /app/server ./
-COPY --from=0 /app/config.docker.yaml ./
+COPY --from=builder /build/server ./
+COPY --from=builder /build/config.docker.yaml ./
 
 EXPOSE 8818
 ENTRYPOINT ./server -c config.docker.yaml
