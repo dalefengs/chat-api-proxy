@@ -39,8 +39,9 @@ changelog:
   use: github
   filters:
     exclude:
-      - "^test:"
+      - "^undone:"
 #      - "^chore"
+      - "^chore"
       - "merge conflict"
       - Merge pull request
       - Merge remote-tracking branch
