@@ -16,8 +16,16 @@ LABEL MAINTAINER="dalefengs@gmail.com"
 
 WORKDIR /app
 
+RUN apt-get update
+RUN apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
 COPY --from=builder /build/server ./
 COPY --from=builder /build/config.docker.yaml ./
 
 EXPOSE 8818
+
 ENTRYPOINT ./server -c config.docker.yaml
