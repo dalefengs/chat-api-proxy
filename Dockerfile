@@ -16,12 +16,10 @@ LABEL MAINTAINER="dalefengs@gmail.com"
 
 WORKDIR /app
 
-RUN apt-get update
-RUN apt-get install -y \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
+RUN apt-get update -y && apt-get upgrade -y
+RUN apt-get install -y tzdata \
+    ca-certificates && \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 COPY --from=builder /build/server ./
 COPY --from=builder /build/config.docker.yaml ./
