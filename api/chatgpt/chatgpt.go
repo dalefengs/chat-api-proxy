@@ -27,7 +27,8 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 
 	token, err := utils.GetAuthToken(c)
 	if err != nil {
-		response.FailWithTookenExpired(nil, err.Error(), c)
+		global.SugarLog.Errorw("get token err", "err", err)
+		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
 

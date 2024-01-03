@@ -14,5 +14,9 @@ func GetAuthToken(c *gin.Context) (token string, err error) {
 		return
 	}
 	token = tokenString[7:]
+	if token == "" {
+		err = errors.New("the token is empty")
+		return
+	}
 	return
 }
