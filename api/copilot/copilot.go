@@ -56,16 +56,19 @@ func GetCoCopilotToken(key string) (token string, data map[string]interface{}, h
 	}
 	httpCode = resp.StatusCode()
 	if httpCode != http.StatusOK {
+		global.SugarLog.Errorw("httpCode!== 200", "statusCode", httpCode, "token", token, "errData", errData)
 		data = errData
 		return
 	}
 	t, ok := data["token"]
 	if !ok {
+		global.SugarLog.Errorw("response token is nil", "token", token, "data", data, "errData", errData)
 		err = errors.New("response token is nil")
 		return
 	}
 	token = t.(string)
 	if token == "" {
+		global.SugarLog.Errorw("response token is empty", "token", token, "data", data, "errData", errData)
 		err = errors.New("response token is empty")
 		return
 	}
