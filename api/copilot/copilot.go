@@ -14,7 +14,7 @@ type CopilotApi struct {
 }
 
 func (co *CopilotApi) Token(c *gin.Context) {
-	token, err := utils.GetAuthToken(c)
+	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
 		global.SugarLog.Errorw("get token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)

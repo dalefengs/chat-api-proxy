@@ -7,13 +7,17 @@ import (
 )
 
 // GetAuthToken header 获取 token
-func GetAuthToken(c *gin.Context) (token string, err error) {
+func GetAuthToken(c *gin.Context, prefix string) (token string, err error) {
+	if prefix == "" {
+		prefix = "Bearer"
+	}
 	tokenString := c.GetHeader("Authorization")
-	if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
+	if tokenString == "" || !strings.HasPrefix(tokenString, prefix+" ") {
 		err = errors.New("the token is invalid")
 		return
 	}
-	token = tokenString[7:]
+	prefixLen := len(prefix) + 1
+	token = tokenString[prefixLen:]
 	if token == "" {
 		err = errors.New("the token is empty")
 		return
