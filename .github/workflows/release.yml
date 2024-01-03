@@ -1,11 +1,13 @@
 name: Release Drafter
-
 on:
   push:
     tags:
       - 'v*'
   pull_request:
     types: [ opened, reopened, synchronize ]
+
+env:
+  TZ: Asia/Shanghai
 
 permissions:
   contents: read
