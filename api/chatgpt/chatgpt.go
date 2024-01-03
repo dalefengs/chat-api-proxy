@@ -41,7 +41,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 		Post(url)
 
 	if err != nil {
-		global.SugarLog.Errorw("request http error", "url", url, "req", req, "token", token)
+		global.SugarLog.Errorw("request http error", "err", err, "url", url, "req", req, "token", token)
 		return
 	}
 	defer resp.RawBody().Close()

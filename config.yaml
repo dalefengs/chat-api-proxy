@@ -16,7 +16,7 @@ zap:
 
 copilot:
   tokenUrl: https://api.github.com/copilot_internal/v2/token
-  cotokenUrl: https://api.cocopilot.org/copilot_internal/v2/tokenz
+  coTokenUrl: https://api.cocopilot.org/copilot_internal/v2/token
   completionsUrl: https://api.githubcopilot.com/chat/completions
 
 openai:
