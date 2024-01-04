@@ -14,6 +14,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -25,10 +26,10 @@ func init() {
 	var err error
 	CopilotTokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(22*time.Minute))
 	if err != nil {
-		global.SugarLog.Errorw("init cache err", "err", err)
+		log.Println("init CopilotTokenCache error ", err.Error())
 		panic(err)
 	}
-	global.SugarLog.Infow("init copilot token cache success")
+	log.Println("init CopilotTokenCache success")
 }
 
 type CopilotApi struct {
