@@ -44,8 +44,6 @@ func (co *CopilotApi) CoToken(c *gin.Context) {
 		return
 	}
 	copilotToken, respMap, httpStatus, err := GetCoCopilotToken(token)
-	global.SugarLog.Debugw("Debug GetCoCopilotToken", "token", token, "copilotToken", copilotToken)
-	global.SugarLog.Infow("Debug GetCoCopilotToken", "token", token, "copilotToken", copilotToken)
 	cacheErr := CopilotTokenCache.Set(token, []byte(copilotToken))
 	if cacheErr != nil {
 		global.SugarLog.Errorw("CoToken set cache err", "err", cacheErr)
@@ -64,6 +62,7 @@ func (co *CopilotApi) CoCompletions(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
+		global.SugarLog.Errorw("CoCompletions bind json err", "err", err)
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -86,6 +85,7 @@ func (co *CopilotApi) CoCompletions(c *gin.Context) {
 
 	if err != nil {
 		global.SugarLog.Errorw("request http error", "err", err, "url", url, "req", req, "token", token)
+		response.FailWithChat(http.StatusInternalServerError, err.Error(), c)
 		return
 	}
 	defer resp.RawBody().Close()
@@ -101,7 +101,8 @@ func (co *CopilotApi) CoCompletions(c *gin.Context) {
 		var data map[string]interface{}
 		jsonErr := jsoniter.Unmarshal(body, &data)
 		if jsonErr != nil {
-			response.FailWithChat(resp.StatusCode(), jsonErr.Error(), c)
+			global.SugarLog.Errorw("CoCompletions response json unmarshal error", "err", jsonErr, "body", string(body))
+			response.FailWithChat(http.StatusInternalServerError, jsonErr.Error(), c)
 			return
 		}
 		c.JSON(resp.StatusCode(), data)
@@ -171,6 +172,6 @@ func GetCoCopilotToken(key string) (token string, data map[string]interface{}, h
 		err = errors.New("response token is empty")
 		return
 	}
-	global.SugarLog.Infow("GetCoCopilotToken", "token", token)
+	global.SugarLog.Infow("GetCoCopilotToken", "key", "token", token)
 	return
 }
