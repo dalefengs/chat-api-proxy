@@ -34,6 +34,7 @@ func Routers() *gin.Engine {
 	}
 	{
 		copilotRouter.InitCopilotRouter(PublicGroup)
+		copilotRouter.InitCoCopilotRouter(PublicGroup)
 		chatgptRouter.InitChatGPTRouter(PublicGroup)
 	}
 	global.Log.Info("router register success")

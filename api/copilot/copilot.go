@@ -2,8 +2,10 @@ package copilot
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
+	"github.com/allegro/bigcache/v3"
 	"github.com/dalefeng/chat-api-reverse/global"
 	"github.com/dalefeng/chat-api-reverse/model/common/response"
 	copilotModel "github.com/dalefeng/chat-api-reverse/model/copilot"
@@ -14,19 +16,39 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
+
+var CopilotTokenCache *bigcache.BigCache
+
+func init() {
+	var err error
+	CopilotTokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(22*time.Minute))
+	if err != nil {
+		global.SugarLog.Errorw("init cache err", "err", err)
+		panic(err)
+	}
+	global.SugarLog.Infow("init copilot token cache success")
+}
 
 type CopilotApi struct {
 }
 
-func (co *CopilotApi) Token(c *gin.Context) {
+// CoToken 代理从 CoCopilot 获取到 Github Copilot CoToken
+func (co *CopilotApi) CoToken(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
-		global.SugarLog.Errorw("get token err", "err", err)
+		global.SugarLog.Errorw("get auth token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
-	_, respMap, httpStatus, err := GetCoCopilotToken(token)
+	copilotToken, respMap, httpStatus, err := GetCoCopilotToken(token)
+	global.SugarLog.Debugw("Debug GetCoCopilotToken", "token", token, "copilotToken", copilotToken)
+	global.SugarLog.Infow("Debug GetCoCopilotToken", "token", token, "copilotToken", copilotToken)
+	cacheErr := CopilotTokenCache.Set(token, []byte(copilotToken))
+	if cacheErr != nil {
+		global.SugarLog.Errorw("CoToken set cache err", "err", cacheErr)
+	}
 	c.Status(httpStatus)
 	if err != nil {
 		global.SugarLog.Errorw("GetCoCopilotToken", "err", err, "token", token)
@@ -36,7 +58,8 @@ func (co *CopilotApi) Token(c *gin.Context) {
 	c.JSON(httpStatus, respMap)
 }
 
-func (co *CopilotApi) Completions(c *gin.Context) {
+// CoCompletions 兼容 CoCopilot 的官方 Completions 接口
+func (co *CopilotApi) CoCompletions(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -46,7 +69,7 @@ func (co *CopilotApi) Completions(c *gin.Context) {
 
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
-		global.SugarLog.Errorw("get token err", "err", err)
+		global.SugarLog.Errorw("get auth token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
