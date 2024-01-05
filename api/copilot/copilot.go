@@ -108,8 +108,9 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 			err = tokenErr
 			return
 		}
+		CopilotTokenCache.Set(token, []byte(copilotToken))
 	} else {
-		global.SugarLog.Infow("CoCompletions get cache success", "token", token)
+		global.SugarLog.Infow("CoCompletions get cache success", "copilotToken", copilotToken)
 		copilotToken = string(cacheToken)
 	}
 	return
