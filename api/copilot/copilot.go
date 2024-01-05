@@ -33,38 +33,57 @@ func init() {
 type CopilotApi struct {
 }
 
-// CoTokenHander 代理从 CoCopilot 获取到 Github Copilot CoTokenHander
-func (co *CopilotApi) CoTokenHander(c *gin.Context) {
+// TokenHander 从 官方 Copilot 获取到 Github Copilot
+func (co *CopilotApi) TokenHander(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
-		global.SugarLog.Errorw("get auth token err", "err", err)
+		global.SugarLog.Errorw("TokenHander get auth token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
-	_, respMap, httpStatus, err := GetCoCopilotToken(token)
+	_, respMap, httpStatus, err := GetCopilotToken(token, false)
 
 	c.Status(httpStatus)
 	if err != nil {
-		global.SugarLog.Errorw("GetCoCopilotToken", "err", err, "token", token)
+		global.SugarLog.Errorw("TokenHander GetCopilotToken error", "err", err, "token", token)
 		c.JSON(httpStatus, respMap)
 		return
 	}
 	c.JSON(httpStatus, respMap)
 }
 
-// CoCompletionsHandler 兼容 CoCopilot 的官方 Completions 接口
-func (co *CopilotApi) CoCompletionsHandler(c *gin.Context) {
+// CoTokenHander 代理从 CoCopilot 获取到 Github Copilot CoTokenHander
+func (co *CopilotApi) CoTokenHander(c *gin.Context) {
+	token, err := utils.GetAuthToken(c, "token")
+	if err != nil {
+		global.SugarLog.Errorw("CoTokenHander get auth token err", "err", err)
+		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		return
+	}
+	_, respMap, httpStatus, err := GetCopilotToken(token, true)
+
+	c.Status(httpStatus)
+	if err != nil {
+		global.SugarLog.Errorw("CoTokenHander GetCopilotToken error", "err", err, "token", token)
+		c.JSON(httpStatus, respMap)
+		return
+	}
+	c.JSON(httpStatus, respMap)
+}
+
+// CompletionsHandler 兼容 CoCopilot 的官方 Completions 接口
+func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		global.SugarLog.Errorw("CoCompletionsHandler bind json err", "err", err)
+		global.SugarLog.Errorw("CompletionsHandler bind json err", "err", err)
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
-		global.SugarLog.Errorw("CoCompletionsHandler get auth token err", "err", err)
+		global.SugarLog.Errorw("CompletionsHandler get auth token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
@@ -79,17 +98,17 @@ func (co *CopilotApi) CoCompletionsHandler(c *gin.Context) {
 	// 如果 token 过期，重新获取一次 token
 	if errors.Is(err, errors.New("token expired")) {
 		CopilotTokenCache.Delete(token) // 删除缓存
-		global.SugarLog.Infow("CoCompletionsHandler token expired, try get new token", "token", token)
-		coCopilotToken, _, _, err := GetCoCopilotToken(token)
+		global.SugarLog.Infow("CompletionsHandler token expired, try get new token", "token", token)
+		coCopilotToken, _, _, err := GetCopilotToken(token, true)
 		if err != nil {
-			global.SugarLog.Errorw("CoCompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
+			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
 			response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 			return
 		}
-		global.SugarLog.Infow("CoCompletionsHandler http get token is success")
+		global.SugarLog.Infow("CompletionsHandler http get token is success")
 		err = CompletionsRequest(c, req, coCopilotToken)
 		if err != nil {
-			global.SugarLog.Errorw("CoCompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
+			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
 			return
 		}
 	}
@@ -99,17 +118,17 @@ func (co *CopilotApi) CoCompletionsHandler(c *gin.Context) {
 func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 	cacheToken, cacheErr := CopilotTokenCache.Get(token)
 	if cacheErr != nil {
-		global.SugarLog.Infow("CoCompletionsHandler get cache err, Try http fetch token", "err", cacheErr)
+		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr)
 		var tokenErr error
-		copilotToken, _, _, tokenErr = GetCoCopilotToken(token)
+		copilotToken, _, _, tokenErr = GetCopilotToken(token, true)
 		if tokenErr != nil {
-			global.SugarLog.Errorw("CoCompletionsHandler http fetch token error", "cacheErr", cacheErr, "tokenErr", tokenErr, "token", token)
+			global.SugarLog.Errorw("CompletionsHandler http fetch token error", "cacheErr", cacheErr, "tokenErr", tokenErr, "token", token)
 			err = tokenErr
 			return
 		}
 	} else {
 		copilotToken = string(cacheToken)
-		global.SugarLog.Infow("CoCompletionsHandler get cache success", "copilotToken", copilotToken)
+		global.SugarLog.Infow("CompletionsHandler get cache success", "copilotToken", copilotToken)
 	}
 	return
 }
@@ -140,15 +159,15 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 	if strings.Contains(respContentType, "text/plain") {
 		body, err := io.ReadAll(reader)
 		if err != nil {
-			global.SugarLog.Errorw("CoCompletionsHandler reader body err", "err", err)
+			global.SugarLog.Errorw("CompletionsHandler reader body err", "err", err)
 			return err
 		}
 		bodyStr := strings.TrimRight(string(body), "\n")
 		if bodyStr == "unauthorized: token expired" {
-			global.SugarLog.Errorw("CoCompletionsHandler token expired", "body", bodyStr)
+			global.SugarLog.Errorw("CompletionsHandler token expired", "body", bodyStr)
 			return errors.New("token expired")
 		}
-		global.SugarLog.Infow("CoCompletionsHandler response error", "body", bodyStr)
+		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr)
 		response.FailWithChat(resp.StatusCode(), bodyStr, c)
 		return nil
 	}
@@ -166,7 +185,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			global.SugarLog.Errorw("CoCompletionsHandler reader err", "err", err)
+			global.SugarLog.Errorw("CompletionsHandler reader err", "err", err)
 			break
 		}
 		w.Write(line)
@@ -175,14 +194,21 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 	return
 }
 
-// GetCoCopilotToken get token from coCopilot
-func GetCoCopilotToken(key string) (token string, data map[string]interface{}, httpCode int, err error) {
+// GetCopilotToken get token from coCopilot
+// isCo: true: coCopilot, false: Copilot
+func GetCopilotToken(key string, isCo bool) (token string, data map[string]interface{}, httpCode int, err error) {
 	data = make(map[string]interface{})
 	errData := make(map[string]interface{})
 	httpCode = http.StatusInternalServerError
 	client := resty.New()
+	url := global.Config.Copilot.TokenURL
+	host := global.Config.Copilot.CopilotHost
+	if isCo {
+		url = global.Config.Copilot.CoTokenURL
+		host = global.Config.Copilot.CoCopilotHost
+	}
 	resp, err := client.R().
-		SetHeader("Host", "api.cocopilot.org").
+		SetHeader("Host", host).
 		SetHeader("Authorization", "token "+key).
 		SetHeader("Editor-Version", "vscode/1.85.0").
 		SetHeader("Editor-Plugin-Version", "copilot-chat/0.11.1").
@@ -190,7 +216,7 @@ func GetCoCopilotToken(key string) (token string, data map[string]interface{}, h
 		SetHeader("Accept", "*/*").
 		SetResult(&data).
 		SetError(&errData).
-		Get(global.Config.Copilot.CoTokenURL)
+		Get(url)
 	if err != nil {
 		global.SugarLog.Errorw("CoTokenHander request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
 		return
@@ -213,7 +239,7 @@ func GetCoCopilotToken(key string) (token string, data map[string]interface{}, h
 		err = errors.New("response token is empty")
 		return
 	}
-	global.SugarLog.Infow("CoTokenHander GetCoCopilotToken Success", "key", key)
+	global.SugarLog.Infow("CoTokenHander GetCopilotToken Success", "key", key)
 	cacheErr := CopilotTokenCache.Set(token, []byte(token))
 	if cacheErr != nil {
 		global.SugarLog.Errorw("CoTokenHander set cache err", "err", cacheErr)
