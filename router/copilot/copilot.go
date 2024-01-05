@@ -11,8 +11,8 @@ func (s *Router) InitCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("copilot")
 	copilotApi := api.ApiGroupApp.CopilotApi
 	{
-		baseRouter.GET("copilot_internal/v2/token", copilotApi.CoToken) // 获取 token
-		baseRouter.POST("v1/chat/completions", copilotApi.CoCompletions)
+		baseRouter.GET("copilot_internal/v2/token", copilotApi.CoTokenHander) // 获取 token
+		baseRouter.POST("v1/chat/completions", copilotApi.CoCompletionsHandler)
 	}
 	return baseRouter
 }
@@ -21,8 +21,8 @@ func (s *Router) InitCoCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("cocopilot")
 	copilotApi := api.ApiGroupApp.CopilotApi
 	{
-		baseRouter.GET("copilot_internal/v2/token", copilotApi.CoToken) // 获取 token
-		baseRouter.POST("v1/chat/completions", copilotApi.CoCompletions)
+		baseRouter.GET("copilot_internal/v2/token", copilotApi.CoTokenHander) // 获取 token
+		baseRouter.POST("v1/chat/completions", copilotApi.CoCompletionsHandler)
 	}
 	return baseRouter
 }
