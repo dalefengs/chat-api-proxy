@@ -165,6 +165,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 	w.Header().Set("X-Accel-Buffering", "no") // // 禁用nginx缓存,防止nginx会缓存数据导致数据流是一段一段的
 	flusher, _ := w.(http.Flusher)
 
+	count := 0
 	for {
 		line, err := reader.ReadString('\n')
 		if err == io.EOF {
@@ -173,12 +174,16 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 			global.SugarLog.Errorw("reader err", "err", err)
 			break
 		}
-		if line == "\n" {
-			continue
-		}
-		fmt.Fprintf(w, line+"\n")
+
+		fmt.Fprintf(w, line)
 		flusher.Flush()
+		count++
+		if count == 2 {
+			flusher.Flush()
+			count = 0
+		}
 	}
+	flusher.Flush()
 	return
 }
 
