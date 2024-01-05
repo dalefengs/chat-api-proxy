@@ -143,7 +143,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		body, err := io.ReadAll(reader)
 		if err != nil {
 			global.SugarLog.Errorw("CoCompletions reader body err", "err", err)
-			return
+			return err
 		}
 		bodyStr := strings.TrimRight(string(body), "\n")
 
@@ -153,7 +153,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 
 		global.SugarLog.Infow("CoCompletions response error", "body", string(body))
 		response.FailWithChat(resp.StatusCode(), bodyStr, c)
-		return
+		return nil
 	}
 
 	w := c.Writer
