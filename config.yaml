@@ -17,11 +17,9 @@ zap:
 copilot:
   # github copilot
   tokenUrl: https://api.github.com/copilot_internal/v2/token
-  copilotHost: api.github.com
   completionsUrl: https://api.githubcopilot.com/chat/completions
 
   # cocopilot
-  coCopilotHost: api.cocopilot.org
   coTokenUrl: https://api.cocopilot.org/copilot_internal/v2/token
 
 openai:

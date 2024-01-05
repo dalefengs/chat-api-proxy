@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -201,14 +202,17 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	errData := make(map[string]interface{})
 	httpCode = http.StatusInternalServerError
 	client := resty.New()
-	url := global.Config.Copilot.TokenURL
-	host := global.Config.Copilot.CopilotHost
+	tokenUrl := global.Config.Copilot.TokenURL
 	if isCo {
-		url = global.Config.Copilot.CoTokenURL
-		host = global.Config.Copilot.CoCopilotHost
+		tokenUrl = global.Config.Copilot.CoTokenURL
+	}
+	u, err := url.Parse(tokenUrl)
+	if err != nil {
+		global.SugarLog.Errorw("CoTokenHander parse url error", "err", err, "tokenUrl", tokenUrl)
+		return
 	}
 	resp, err := client.R().
-		SetHeader("Host", host).
+		SetHeader("Host", u.Host).
 		SetHeader("Authorization", "token "+key).
 		SetHeader("Editor-Version", "vscode/1.85.0").
 		SetHeader("Editor-Plugin-Version", "copilot-chat/0.11.1").
@@ -216,7 +220,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		SetHeader("Accept", "*/*").
 		SetResult(&data).
 		SetError(&errData).
-		Get(url)
+		Get(tokenUrl)
 	if err != nil {
 		global.SugarLog.Errorw("CoTokenHander request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
 		return
