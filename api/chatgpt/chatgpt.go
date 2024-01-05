@@ -21,6 +21,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
+		global.SugarLog.Errorw("Completions bind json err", "err", err)
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -84,9 +85,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 		if line == "\n" {
 			continue
 		}
-		// 五行刷新一次缓冲区。
 		fmt.Fprintf(w, line+"\n")
 		flusher.Flush()
 	}
-	flusher.Flush()
 }

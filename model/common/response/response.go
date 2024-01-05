@@ -60,11 +60,14 @@ func FailWithTookenExpired(data interface{}, message string, c *gin.Context) {
 }
 
 func FailWithChat(code int, message string, c *gin.Context) {
-	msg := ChatResponseErrorResult{
+	result := ChatResponseErrorResult{
 		Code:    "error",
 		Message: message,
 		Param:   nil,
 		Type:    "error",
 	}
-	c.JSON(code, msg)
+	data := map[string]ChatResponseErrorResult{
+		"error": result,
+	}
+	c.JSON(code, data)
 }

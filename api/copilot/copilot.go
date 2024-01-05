@@ -12,7 +12,6 @@ import (
 	"github.com/dalefeng/chat-api-reverse/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
 	"io"
 	"log"
 	"net/http"
@@ -24,7 +23,7 @@ var CopilotTokenCache *bigcache.BigCache
 
 func init() {
 	var err error
-	CopilotTokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(22*time.Minute))
+	CopilotTokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(23*time.Minute))
 	if err != nil {
 		log.Println("init CopilotTokenCache error ", err.Error())
 		panic(err)
@@ -74,17 +73,60 @@ func (co *CopilotApi) CoCompletions(c *gin.Context) {
 		return
 	}
 
+	// 获取 CopilotToken
+	copilotToken, err := GetCopilotTokenWithCache(token)
+	if err != nil {
+		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		return
+	}
+	err = CompletionsRequest(c, req, copilotToken)
+	// 如果 token 过期，重新获取一次 token
+	if errors.Is(err, errors.New("token expired")) {
+		CopilotTokenCache.Delete(token) // 删除缓存
+		global.SugarLog.Infow("CompletionsRequest token expired, try get new token", "token", token)
+		coCopilotToken, _, _, err := GetCoCopilotToken(token)
+		if err != nil {
+			global.SugarLog.Errorw("CoCompletions http fetch token, Try twice error", "err", err, "token", token)
+			response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+			return
+		}
+		if err := CompletionsRequest(c, req, coCopilotToken); err == nil {
+			CopilotTokenCache.Set(token, []byte(coCopilotToken))
+		}
+	}
+}
+
+// GetCopilotTokenWithCache 先从缓存中获取 CopilotToken，如果缓存中没有，再从 CoCopilot 获取
+func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
+	cacheToken, cacheErr := CopilotTokenCache.Get(token)
+	if cacheErr != nil {
+		global.SugarLog.Infow("CoCompletions get cache err, Try http fetch token", "err", cacheErr)
+		var tokenErr error
+		copilotToken, _, _, tokenErr = GetCoCopilotToken(token)
+		if tokenErr != nil {
+			global.SugarLog.Errorw("CoCompletions http fetch token error", "cacheErr", cacheErr, "tokenErr", tokenErr, "token", token)
+			err = tokenErr
+			return
+		}
+	} else {
+		global.SugarLog.Infow("CoCompletions get cache success", "token", token)
+		copilotToken = string(cacheToken)
+	}
+	return
+}
+
+// CompletionsRequest 请求 Copilot Completions 接口
+func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken string) (err error) {
 	url := global.Config.Copilot.CompletionsURL
 	client := resty.New()
 	resp, err := client.R().
 		SetDoNotParseResponse(true).
-		SetHeaders(copilotModel.GetCompletionsHeader(token)).
-		SetAuthToken(token).
+		SetHeaders(copilotModel.GetCompletionsHeader(copilotToken)).
 		SetBody(req).
 		Post(url)
 
 	if err != nil {
-		global.SugarLog.Errorw("request http error", "err", err, "url", url, "req", req, "token", token)
+		global.SugarLog.Errorw("request http error", "err", err, "url", url, "req", req, "copilotToken", copilotToken)
 		response.FailWithChat(http.StatusInternalServerError, err.Error(), c)
 		return
 	}
@@ -92,20 +134,25 @@ func (co *CopilotApi) CoCompletions(c *gin.Context) {
 	reader := bufio.NewReader(resp.RawBody())
 
 	respContentType := resp.Header().Get("Content-Type")
-	if !strings.Contains(respContentType, "text/event-stream") {
+
+	if resp.StatusCode() != http.StatusOK {
+		global.SugarLog.Infow("respContentType", "respContentType", respContentType)
+	}
+
+	if strings.Contains(respContentType, "text/plain") {
 		body, err := io.ReadAll(reader)
 		if err != nil {
-			global.SugarLog.Errorw("reader body err", "err", err)
+			global.SugarLog.Errorw("CoCompletions reader body err", "err", err)
 			return
 		}
-		var data map[string]interface{}
-		jsonErr := jsoniter.Unmarshal(body, &data)
-		if jsonErr != nil {
-			global.SugarLog.Errorw("CoCompletions response json unmarshal error", "err", jsonErr, "body", string(body))
-			response.FailWithChat(http.StatusInternalServerError, jsonErr.Error(), c)
-			return
+		bodyStr := strings.TrimRight(string(body), "\n")
+
+		if bodyStr == "unauthorized: token expired" {
+			return errors.New("token expired")
 		}
-		c.JSON(resp.StatusCode(), data)
+
+		global.SugarLog.Infow("CoCompletions response error", "body", string(body))
+		response.FailWithChat(resp.StatusCode(), bodyStr, c)
 		return
 	}
 
@@ -131,7 +178,7 @@ func (co *CopilotApi) CoCompletions(c *gin.Context) {
 		fmt.Fprintf(w, line+"\n")
 		flusher.Flush()
 	}
-	flusher.Flush()
+	return
 }
 
 // GetCoCopilotToken get token from coCopilot
@@ -172,6 +219,6 @@ func GetCoCopilotToken(key string) (token string, data map[string]interface{}, h
 		err = errors.New("response token is empty")
 		return
 	}
-	global.SugarLog.Infow("GetCoCopilotToken", "key", "token", token)
+	global.SugarLog.Infow("GetCoCopilotToken", "key", key, "token", token)
 	return
 }
