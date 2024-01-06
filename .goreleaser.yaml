@@ -48,7 +48,7 @@ changelog:
       - go mod tidy
   groups:
     - title: ":arrow_up: Dependency updates" # 依赖更新
-      regexp: '^.*?(feat|fix)\(deps\)!?:.+$'
+      regexp: '^.*?(deps|arrow_up)(\([[:word:]]+\))??!?:.+$'
       order: 300
     - title: ":sparkles: Features" # 新功能： 例如，新功能、新页面、新组件等
       regexp: '^.*?(feat|sparkles)(\([[:word:]]+\))??!?:.+$'
