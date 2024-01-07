@@ -1,6 +1,7 @@
 package copilot
 
 import (
+	"github.com/dalefeng/chat-api-reverse/utils"
 	"github.com/google/uuid"
 	"strconv"
 	"time"
@@ -16,7 +17,7 @@ func GetCompletionsHeader(token string) map[string]string {
 		"X-Request-Id":           uid,
 		"X-Github-Api-Version":   "2023-07-07",
 		"Vscode-Sessionid":       uid + strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10),
-		"vscode-machineid":       "your_machine_id",
+		"vscode-machineid":       utils.GenHexStr(64),
 		"Editor-Version":         "vscode/1.85.0",
 		"Editor-Plugin-Version":  "copilot-chat/0.11.1",
 		"Openai-Organization":    "github-copilot",
