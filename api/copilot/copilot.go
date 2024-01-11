@@ -34,11 +34,11 @@ func init() {
 type CopilotApi struct {
 }
 
-// TokenHander 从 官方 Copilot 获取到 Github Copilot
-func (co *CopilotApi) TokenHander(c *gin.Context) {
+// TokenHandler 从 官方 Copilot 获取到 Github Copilot
+func (co *CopilotApi) TokenHandler(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
-		global.SugarLog.Errorw("TokenHander get auth token err", "err", err)
+		global.SugarLog.Errorw("TokenHandler get auth token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
@@ -46,18 +46,18 @@ func (co *CopilotApi) TokenHander(c *gin.Context) {
 
 	c.Status(httpStatus)
 	if err != nil {
-		global.SugarLog.Errorw("TokenHander GetCopilotToken error", "err", err, "token", token)
+		global.SugarLog.Errorw("TokenHandler GetCopilotToken error", "err", err, "token", token)
 		c.JSON(httpStatus, respMap)
 		return
 	}
 	c.JSON(httpStatus, respMap)
 }
 
-// CoTokenHander 代理从 CoCopilot 获取到 Github Copilot CoTokenHander
-func (co *CopilotApi) CoTokenHander(c *gin.Context) {
+// CoTokenHandler 代理从 CoCopilot 获取到 Github Copilot CoTokenHandler
+func (co *CopilotApi) CoTokenHandler(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
-		global.SugarLog.Errorw("CoTokenHander get auth token err", "err", err)
+		global.SugarLog.Errorw("CoTokenHandler get auth token err", "err", err)
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
@@ -65,7 +65,7 @@ func (co *CopilotApi) CoTokenHander(c *gin.Context) {
 
 	c.Status(httpStatus)
 	if err != nil {
-		global.SugarLog.Errorw("CoTokenHander GetCopilotToken error", "err", err, "token", token)
+		global.SugarLog.Errorw("CoTokenHandler GetCopilotToken error", "err", err, "token", token)
 		c.JSON(httpStatus, respMap)
 		return
 	}
@@ -208,7 +208,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	}
 	u, err := url.Parse(tokenUrl)
 	if err != nil {
-		global.SugarLog.Errorw("CoTokenHander parse url error", "err", err, "tokenUrl", tokenUrl)
+		global.SugarLog.Errorw("GetCopilotToken parse url error", "err", err, "tokenUrl", tokenUrl)
 		return
 	}
 	resp, err := client.R().
@@ -222,31 +222,31 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		SetError(&errData).
 		Get(tokenUrl)
 	if err != nil {
-		global.SugarLog.Errorw("CoTokenHander request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
+		global.SugarLog.Errorw("GetCopilotToken request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
 		return
 	}
 	httpCode = resp.StatusCode()
 	if httpCode != http.StatusOK {
-		global.SugarLog.Errorw("CoTokenHander httpCode!== 200", "statusCode", httpCode, "token", token, "errData", errData)
+		global.SugarLog.Errorw("GetCopilotToken httpCode!== 200", "statusCode", httpCode, "token", token, "errData", errData)
 		data = errData
 		return
 	}
 	t, ok := data["token"]
 	if !ok {
-		global.SugarLog.Errorw("CoTokenHander response token is nil", "token", token, "data", data, "errData", errData)
+		global.SugarLog.Errorw("GetCopilotToken response token is nil", "token", token, "data", data, "errData", errData)
 		err = errors.New("response token is nil")
 		return
 	}
 	token = t.(string)
 	if token == "" {
-		global.SugarLog.Errorw("CoTokenHander response token is empty", "token", token, "data", data, "errData", errData)
+		global.SugarLog.Errorw("GetCopilotToken response token is empty", "token", token, "data", data, "errData", errData)
 		err = errors.New("response token is empty")
 		return
 	}
-	global.SugarLog.Infow("CoTokenHander GetCopilotToken Success", "key", key)
-	cacheErr := CopilotTokenCache.Set(token, []byte(token))
+	global.SugarLog.Infow("GetCopilotToken GetCopilotToken Success", "key", key)
+	cacheErr := CopilotTokenCache.Set(key, []byte(token))
 	if cacheErr != nil {
-		global.SugarLog.Errorw("CoTokenHander set cache err", "err", cacheErr)
+		global.SugarLog.Errorw("GetCopilotToken set cache err", "err", cacheErr)
 	}
 	return
 }
