@@ -21,7 +21,7 @@ func (s *Router) InitCoCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("cocopilot")
 	copilotApi := api.ApiGroupApp.CopilotApi
 	{
-		baseRouter.GET("copilot_internal/v2/token", copilotApi.CoTokenHander) // 官方获取 token
+		baseRouter.GET("copilot_internal/v2/token", copilotApi.CoTokenHandler) // 官方获取 token
 	}
 	return baseRouter
 }
