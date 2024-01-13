@@ -20,6 +20,7 @@ import (
 )
 
 var CopilotTokenCache *bigcache.BigCache
+var TokenExpiredError = errors.New("token expired")
 
 func init() {
 	var err error
@@ -97,7 +98,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	}
 	err = CompletionsRequest(c, req, copilotToken)
 	// 如果 token 过期，重新获取一次 token
-	if errors.Is(err, errors.New("token expired")) {
+	if errors.Is(err, TokenExpiredError) {
 		CopilotTokenCache.Delete(token) // 删除缓存
 		global.SugarLog.Infow("CompletionsHandler token expired, try get new token", "token", token)
 		coCopilotToken, _, _, err := GetCopilotToken(token, true)
@@ -166,7 +167,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		bodyStr := strings.TrimRight(string(body), "\n")
 		if bodyStr == "unauthorized: token expired" {
 			global.SugarLog.Errorw("CompletionsHandler token expired", "body", bodyStr)
-			return errors.New("token expired")
+			return TokenExpiredError
 		}
 		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr)
 		response.FailWithChat(resp.StatusCode(), bodyStr, c)
