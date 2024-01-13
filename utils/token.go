@@ -17,7 +17,7 @@ func GetAuthToken(c *gin.Context, prefix string) (token string, err error) {
 		return
 	}
 	prefixLen := len(prefix) + 1
-	token = tokenString[prefixLen:]
+	token = strings.TrimSpace(tokenString[prefixLen:])
 	if token == "" {
 		err = errors.New("the token is empty")
 		return

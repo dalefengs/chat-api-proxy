@@ -96,7 +96,9 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
+	global.SugarLog.Infow("CompletionsHandler CompletionsRequest start")
 	err = CompletionsRequest(c, req, copilotToken)
+	global.SugarLog.Infow("CompletionsHandler CompletionsRequest end", "err", err)
 	// 如果 token 过期，重新获取一次 token
 	if errors.Is(err, TokenExpiredError) {
 		CopilotTokenCache.Delete(token) // 删除缓存
@@ -120,7 +122,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 	cacheToken, cacheErr := CopilotTokenCache.Get(token)
 	if cacheErr != nil {
-		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr)
+		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr, "token", token)
 		var tokenErr error
 		copilotToken, _, _, tokenErr = GetCopilotToken(token, true)
 		if tokenErr != nil {
@@ -155,7 +157,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 
 	respContentType := resp.Header().Get("Content-Type")
 	if resp.StatusCode() != http.StatusOK {
-		global.SugarLog.Warnw("CompletionsRequest respContentType", "respContentType", respContentType)
+		global.SugarLog.Warnw("CompletionsRequest respContentType", "respContentType", respContentType, "statusCode", resp.StatusCode())
 	}
 
 	if strings.Contains(respContentType, "text/plain") {
@@ -169,7 +171,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 			global.SugarLog.Errorw("CompletionsHandler token expired", "body", bodyStr)
 			return TokenExpiredError
 		}
-		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr)
+		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr, "copilotToken", copilotToken)
 		response.FailWithChat(resp.StatusCode(), bodyStr, c)
 		return nil
 	}
@@ -230,6 +232,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	if httpCode != http.StatusOK {
 		global.SugarLog.Errorw("GetCopilotToken httpCode!== 200", "statusCode", httpCode, "token", token, "errData", errData)
 		data = errData
+		err = errors.New("get token error, status code is not 200")
 		return
 	}
 	t, ok := data["token"]
