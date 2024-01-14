@@ -29,7 +29,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
 		global.SugarLog.Errorw("get token err", "err", err)
-		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 		var data map[string]interface{}
 		jsonErr := jsoniter.Unmarshal(body, &data)
 		if jsonErr != nil {
-			response.FailWithChat(resp.StatusCode(), jsonErr.Error(), c)
+			response.FailWithOpenAIError(resp.StatusCode(), jsonErr.Error(), c)
 			return
 		}
 		c.JSON(resp.StatusCode(), data)

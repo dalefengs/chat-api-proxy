@@ -40,7 +40,7 @@ func (co *CopilotApi) TokenHandler(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
 		global.SugarLog.Errorw("TokenHandler get auth token err", "err", err)
-		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
 	_, respMap, httpStatus, err := GetCopilotToken(token, false)
@@ -59,7 +59,7 @@ func (co *CopilotApi) CoTokenHandler(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "token")
 	if err != nil {
 		global.SugarLog.Errorw("CoTokenHandler get auth token err", "err", err)
-		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
 	_, respMap, httpStatus, err := GetCopilotToken(token, true)
@@ -86,14 +86,14 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
 		global.SugarLog.Errorw("CompletionsHandler get auth token err", "err", err)
-		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
 
 	// 获取 CopilotToken
 	copilotToken, err := GetCopilotTokenWithCache(token)
 	if err != nil {
-		response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
 	global.SugarLog.Infow("CompletionsHandler CompletionsRequest start")
@@ -106,7 +106,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		coCopilotToken, _, _, err := GetCopilotToken(token, true)
 		if err != nil {
 			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
-			response.FailWithChat(http.StatusUnauthorized, err.Error(), c)
+			response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 			return
 		}
 		global.SugarLog.Infow("CompletionsHandler http get token is success")
@@ -149,7 +149,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 
 	if err != nil {
 		global.SugarLog.Errorw("CompletionsRequest http error", "err", err, "url", url, "req", req, "copilotToken", copilotToken)
-		response.FailWithChat(http.StatusInternalServerError, err.Error(), c)
+		response.FailWithOpenAIError(http.StatusInternalServerError, err.Error(), c)
 		return
 	}
 	defer resp.RawBody().Close()
@@ -172,7 +172,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 			return TokenExpiredError
 		}
 		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr, "copilotToken", copilotToken)
-		response.FailWithChat(resp.StatusCode(), bodyStr, c)
+		response.FailWithOpenAIError(resp.StatusCode(), bodyStr, c)
 		return nil
 	}
 

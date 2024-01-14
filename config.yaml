@@ -4,7 +4,7 @@ system:
   router-prefix: "" # 路由前缀
 
 zap:
-  level: info
+  level: debug
   prefix: '[chat-api-reverse]'
   format: console
   director: log
@@ -25,4 +25,9 @@ copilot:
 openai:
   baseUrl: https://chat.fungs.cn/proxy520
 
+gemini:
+  # https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}
+  # https://api.gemini-chat.pro/
+  baseUrl: https://gemini.baipiao.io
+  apiVersion: v1beta
 

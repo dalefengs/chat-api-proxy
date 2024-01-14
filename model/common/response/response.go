@@ -1,6 +1,7 @@
 package response
 
 import (
+	"github.com/sashabaranov/go-openai"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -59,14 +60,12 @@ func FailWithTookenExpired(data interface{}, message string, c *gin.Context) {
 	Result(TOKEN_EXPIRED, data, message, c)
 }
 
-func FailWithChat(code int, message string, c *gin.Context) {
-	result := ChatResponseErrorResult{
-		Code:    "error",
+func FailWithOpenAIError(code int, message string, c *gin.Context) {
+	result := openai.APIError{
+		Code:    http.StatusBadRequest,
 		Message: message,
-		Param:   nil,
-		Type:    "error",
 	}
-	data := map[string]ChatResponseErrorResult{
+	data := map[string]openai.APIError{
 		"error": result,
 	}
 	c.JSON(code, data)
