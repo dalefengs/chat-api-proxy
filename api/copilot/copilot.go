@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/allegro/bigcache/v3"
 	"github.com/dalefeng/chat-api-reverse/global"
 	"github.com/dalefeng/chat-api-reverse/model/common/response"
@@ -202,7 +203,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 // isCo: true: coCopilot, false: Copilot
 func GetCopilotToken(key string, isCo bool) (token string, data map[string]interface{}, httpCode int, err error) {
 	data = make(map[string]interface{})
-	errData := make(map[string]interface{})
+	errDataMap := make(map[string]interface{})
 	httpCode = http.StatusInternalServerError
 	client := resty.New()
 	tokenUrl := global.Config.Copilot.TokenURL
@@ -222,7 +223,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		SetHeader("User-Agent", "GitHubCopilotChat/0.11.1").
 		SetHeader("Accept", "*/*").
 		SetResult(&data).
-		SetError(&errData).
+		SetError(&errDataMap).
 		Get(tokenUrl)
 	if err != nil {
 		global.SugarLog.Errorw("GetCopilotToken request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
@@ -230,20 +231,20 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	}
 	httpCode = resp.StatusCode()
 	if httpCode != http.StatusOK {
-		global.SugarLog.Errorw("GetCopilotToken httpCode!== 200", "statusCode", httpCode, "token", token, "errData", errData)
-		data = errData
-		err = errors.New("get token error, status code is not 200")
+		global.SugarLog.Errorw("GetCopilotToken httpCode!== 200", "statusCode", httpCode, "key", key, "errDataMap", errDataMap)
+		data = errDataMap
+		err = fmt.Errorf("get copilot token error, %s", errDataMap["message"])
 		return
 	}
 	t, ok := data["token"]
 	if !ok {
-		global.SugarLog.Errorw("GetCopilotToken response token is nil", "token", token, "data", data, "errData", errData)
+		global.SugarLog.Errorw("GetCopilotToken response token is nil", "token", token, "data", data, "errDataMap", errDataMap)
 		err = errors.New("response token is nil")
 		return
 	}
 	token = t.(string)
 	if token == "" {
-		global.SugarLog.Errorw("GetCopilotToken response token is empty", "token", token, "data", data, "errData", errData)
+		global.SugarLog.Errorw("GetCopilotToken response token is empty", "token", token, "data", data, "errDataMap", errDataMap)
 		err = errors.New("response token is empty")
 		return
 	}
