@@ -1,4 +1,4 @@
-package chatgpt
+package openai
 
 import (
 	"bufio"
@@ -8,16 +8,15 @@ import (
 	"github.com/dalefeng/chat-api-reverse/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"strings"
 )
 
-type ChatGPTApi struct {
+type OpenApi struct {
 }
 
-func (co *ChatGPTApi) Completions(c *gin.Context) {
+func (co *OpenApi) Completions(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -57,7 +56,7 @@ func (co *ChatGPTApi) Completions(c *gin.Context) {
 			return
 		}
 		var data map[string]interface{}
-		jsonErr := jsoniter.Unmarshal(body, &data)
+		jsonErr := global.Json.Unmarshal(body, &data)
 		if jsonErr != nil {
 			response.FailWithOpenAIError(resp.StatusCode(), jsonErr.Error(), c)
 			return

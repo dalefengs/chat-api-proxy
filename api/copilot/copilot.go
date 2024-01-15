@@ -8,14 +8,15 @@ import (
 	"github.com/allegro/bigcache/v3"
 	"github.com/dalefeng/chat-api-reverse/global"
 	"github.com/dalefeng/chat-api-reverse/model/common/response"
-	copilotModel "github.com/dalefeng/chat-api-reverse/model/copilot"
 	"github.com/dalefeng/chat-api-reverse/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -144,7 +145,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 	client := resty.New()
 	resp, err := client.R().
 		SetDoNotParseResponse(true).
-		SetHeaders(copilotModel.GetCompletionsHeader(copilotToken)).
+		SetHeaders(GetCompletionsHeader(copilotToken)).
 		SetBody(req).
 		Post(url)
 
@@ -177,14 +178,9 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		return nil
 	}
 
+	utils.SetEventStreamHeaders(c)
 	w := c.Writer
-	w.Header().Set("Content-Type", "text/event-stream") // 声明数据格式为event stream
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("X-Accel-Buffering", "no") // // 禁用nginx缓存,防止nginx会缓存数据导致数据流是一段一段的
 	flusher, _ := w.(http.Flusher)
-
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err == io.EOF {
@@ -254,4 +250,26 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		global.SugarLog.Errorw("GetCopilotToken set cache err", "err", cacheErr)
 	}
 	return
+}
+
+// GetCompletionsHeader 获取 Copilot Completions 接口的 Header
+func GetCompletionsHeader(token string) map[string]string {
+	uid := uuid.New().String()
+	headersMap := map[string]string{
+		"Host":                   "api.githubcopilot.com",
+		"Accept-Encoding":        "gzip, deflate, br",
+		"Accept":                 "*/*",
+		"Authorization":          "Bearer " + token,
+		"X-Request-Id":           uid,
+		"X-Github-Api-Version":   "2023-07-07",
+		"Vscode-Sessionid":       uid + strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10),
+		"vscode-machineid":       utils.GenHexStr(64),
+		"Editor-Version":         "vscode/1.85.0",
+		"Editor-Plugin-Version":  "copilot-chat/0.11.1",
+		"Openai-Organization":    "github-copilot",
+		"Copilot-Integration-Id": "vscode-chat",
+		"Openai-Intent":          "conversation-panel",
+		"User-Agent":             "GitHubCopilotChat/0.11.1",
+	}
+	return headersMap
 }

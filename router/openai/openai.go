@@ -1,4 +1,4 @@
-package chatgpt
+package openai
 
 import (
 	"github.com/dalefeng/chat-api-reverse/api"
@@ -9,9 +9,9 @@ type Router struct{}
 
 func (s *Router) InitChatGPTRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("")
-	chaGPTApi := api.ApiGroupApp.ChatGPTApi
+	openApi := api.ApiGroupApp.OpenApi
 	{
-		baseRouter.POST("v1/chat/completions", chaGPTApi.Completions)
+		baseRouter.POST("v1/chat/completions", openApi.Completions)
 	}
 	return baseRouter
 }

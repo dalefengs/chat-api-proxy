@@ -24,6 +24,8 @@ func Routers() *gin.Engine {
 	//global.Log.Info("use middleware cors")
 	Router.GET(global.Config.System.RouterPrefix+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	global.Log.Info("register swagger handler")
+
+	Router.Use(gin.Recovery())
 	// 方便统一添加路由组前缀 多服务器上线使用
 
 	PublicGroup := Router.Group(global.Config.System.RouterPrefix)

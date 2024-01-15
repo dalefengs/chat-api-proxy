@@ -1,7 +1,7 @@
-package gemini
+package genai
 
 import (
-	"github.com/dalefeng/chat-api-reverse/api/gemini"
+	"github.com/dalefeng/chat-api-reverse/api/genai"
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,9 +9,9 @@ type Router struct{}
 
 func (s *Router) InitGeminiRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("gemini")
-	geminiApi := gemini.GeMiniApi{}
+	genApi := genai.GenApi{}
 	{
-		baseRouter.POST("/v1/chat/completions", geminiApi.CompletionsHandler)
+		baseRouter.POST("/v1/chat/completions", genApi.CompletionsHandler)
 	}
 	return baseRouter
 }

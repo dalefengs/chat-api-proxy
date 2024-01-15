@@ -1,15 +1,15 @@
 package router
 
 import (
-	"github.com/dalefeng/chat-api-reverse/router/chatgpt"
 	"github.com/dalefeng/chat-api-reverse/router/copilot"
-	"github.com/dalefeng/chat-api-reverse/router/gemini"
+	"github.com/dalefeng/chat-api-reverse/router/genai"
+	"github.com/dalefeng/chat-api-reverse/router/openai"
 )
 
 type Group struct {
 	Copilot copilot.Router
-	ChatGPT chatgpt.Router
-	GeMini  gemini.Router
+	ChatGPT openai.Router
+	GeMini  genai.Router
 }
 
 var GroupApp = new(Group)

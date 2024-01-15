@@ -27,7 +27,9 @@ openai:
 
 gemini:
   # https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}
-  # https://api.gemini-chat.pro/
-  baseUrl: https://gemini.baipiao.io
+  # https://api.gemini-chat.pro
+  # https://api-gm.xfjy.in
+  # https://gemini.baipiao.io
+  baseUrl: https://api-gm.xfjy.in
   apiVersion: v1beta
 
