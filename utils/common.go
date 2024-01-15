@@ -13,3 +13,11 @@ func GenHexStr(length int) string {
 	}
 	return hex.EncodeToString(bytes)
 }
+
+func Int2Byte(num int) []byte {
+	return []byte{byte(num >> 24), byte(num >> 16), byte(num >> 8), byte(num)}
+}
+
+func Byte2Int(b []byte) int {
+	return int(b[3]) | int(b[2])<<8 | int(b[1])<<16 | int(b[0])<<24
+}

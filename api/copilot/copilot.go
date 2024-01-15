@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	"github.com/sashabaranov/go-openai"
 	"io"
 	"log"
 	"net/http"
@@ -86,7 +87,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		return
 	}
 
-	if model, ok := req["model"]; ok && model == "gemini-pro" {
+	if model, ok := req["model"]; ok && model == "gemini-pro" || model == openai.GPT432K {
 		global.SugarLog.Debugw("CompletionsHandler gemini-pro model", "model", model)
 		genApi := &genai.GenApi{}
 		genApi.CompletionsHandler(c)
@@ -264,20 +265,20 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 func GetCompletionsHeader(token string) map[string]string {
 	uid := uuid.New().String()
 	headersMap := map[string]string{
-		"Host":                   "api.githubcopilot.com",
-		"Accept-Encoding":        "gzip, deflate, br",
-		"Accept":                 "*/*",
-		"Authorization":          "Bearer " + token,
-		"X-Request-Id":           uid,
-		"X-Github-Api-Version":   "2023-07-07",
-		"Vscode-Sessionid":       uid + strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10),
-		"vscode-machineid":       utils.GenHexStr(64),
-		"Editor-Version":         "vscode/1.85.0",
-		"Editor-Plugin-Version":  "copilot-chat/0.11.1",
-		"Openai-Organization":    "github-copilot",
-		"Copilot-Integration-Id": "vscode-chat",
-		"Openai-Intent":          "conversation-panel",
-		"User-Agent":             "GitHubCopilotChat/0.11.1",
+		"Host":                        "api.githubcopilot.com",
+		"Accept-Encoding":             "gzip, deflate, br",
+		"Accept":                      "*/*",
+		"Authorization":               "Bearer " + token,
+		"X-Request-Id":                uid,
+		"X-Github-CopilotApi-Version": "2023-07-07",
+		"Vscode-Sessionid":            uid + strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10),
+		"vscode-machineid":            utils.GenHexStr(64),
+		"Editor-Version":              "vscode/1.85.0",
+		"Editor-Plugin-Version":       "copilot-chat/0.11.1",
+		"Openai-Organization":         "github-copilot",
+		"Copilot-Integration-Id":      "vscode-chat",
+		"Openai-Intent":               "conversation-panel",
+		"User-Agent":                  "GitHubCopilotChat/0.11.1",
 	}
 	return headersMap
 }
