@@ -3,6 +3,7 @@ package openai
 import (
 	"bufio"
 	"fmt"
+	"github.com/dalefengs/chat-api-proxy/api/genai"
 	"github.com/dalefengs/chat-api-proxy/global"
 	"github.com/dalefengs/chat-api-proxy/model/common/response"
 	"github.com/dalefengs/chat-api-proxy/utils"
@@ -16,12 +17,19 @@ import (
 type OpenApi struct {
 }
 
-func (co *OpenApi) Completions(c *gin.Context) {
+func (co *OpenApi) CompletionsHandler(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		global.SugarLog.Errorw("Completions bind json err", "err", err)
+		global.SugarLog.Errorw("CompletionsHandler bind json err", "err", err)
 		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	if model, ok := req["model"]; ok && model == "gemini-pro" {
+		global.SugarLog.Debugw("CompletionsHandler gemini-pro model", "model", model)
+		genApi := &genai.GenApi{}
+		genApi.CompletionsHandler(c)
 		return
 	}
 

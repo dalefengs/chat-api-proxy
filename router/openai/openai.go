@@ -11,7 +11,7 @@ func (s *Router) InitChatGPTRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("")
 	openApi := api.ApiGroupApp.OpenApi
 	{
-		baseRouter.POST("v1/chat/completions", openApi.Completions)
+		baseRouter.POST("v1/chat/completions", openApi.CompletionsHandler)
 	}
 	return baseRouter
 }

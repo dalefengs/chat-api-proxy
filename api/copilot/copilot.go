@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allegro/bigcache/v3"
+	"github.com/dalefengs/chat-api-proxy/api/genai"
 	"github.com/dalefengs/chat-api-proxy/global"
 	"github.com/dalefengs/chat-api-proxy/model/common/response"
 	"github.com/dalefengs/chat-api-proxy/utils"
@@ -75,13 +76,20 @@ func (co *CopilotApi) CoTokenHandler(c *gin.Context) {
 	c.JSON(httpStatus, respMap)
 }
 
-// CompletionsHandler 兼容 CoCopilot 的官方 Completions 接口
+// CompletionsHandler 兼容 CoCopilot 的官方 CompletionsHandler 接口
 func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	var req map[string]interface{}
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		global.SugarLog.Errorw("CompletionsHandler bind json err", "err", err)
 		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	if model, ok := req["model"]; ok && model == "gemini-pro" {
+		global.SugarLog.Debugw("CompletionsHandler gemini-pro model", "model", model)
+		genApi := &genai.GenApi{}
+		genApi.CompletionsHandler(c)
 		return
 	}
 
@@ -139,7 +147,7 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 	return
 }
 
-// CompletionsRequest 请求 Copilot Completions 接口
+// CompletionsRequest 请求 Copilot CompletionsHandler 接口
 func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken string) (err error) {
 	url := global.Config.Copilot.CompletionsURL
 	client := resty.New()
@@ -252,7 +260,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	return
 }
 
-// GetCompletionsHeader 获取 Copilot Completions 接口的 Header
+// GetCompletionsHeader 获取 Copilot CompletionsHandler 接口的 Header
 func GetCompletionsHeader(token string) map[string]string {
 	uid := uuid.New().String()
 	headersMap := map[string]string{

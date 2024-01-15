@@ -18,7 +18,7 @@ WORKDIR /app
 
 RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install -y tzdata \
-    ca-certificates && \
+    ca-certificates vim && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 COPY --from=builder /build/server ./
