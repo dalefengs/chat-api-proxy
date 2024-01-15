@@ -28,7 +28,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: dalefengs/chat-api-reverse
+          images: dalefengs/chat-api-proxy
           tags: |
             type=raw,value=latest
             type=ref,event=tag

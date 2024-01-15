@@ -1,7 +1,7 @@
 package genai
 
 import (
-	"github.com/dalefeng/chat-api-reverse/api/genai"
+	"github.com/dalefengs/chat-api-proxy/api/genai"
 	"github.com/gin-gonic/gin"
 )
 

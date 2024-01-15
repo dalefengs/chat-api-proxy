@@ -5,7 +5,7 @@ system:
 
 zap:
   level: debug
-  prefix: '[chat-api-reverse]'
+  prefix: '[chat-api-proxy]'
   format: console
   director: log
   encode-level: LowercaseColorLevelEncoder

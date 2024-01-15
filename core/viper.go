@@ -3,8 +3,8 @@ package core
 import (
 	"flag"
 	"fmt"
-	"github.com/dalefeng/chat-api-reverse/core/internal"
-	"github.com/dalefeng/chat-api-reverse/global"
+	"github.com/dalefengs/chat-api-proxy/core/internal"
+	"github.com/dalefengs/chat-api-proxy/global"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"

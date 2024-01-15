@@ -2,8 +2,8 @@ package core
 
 import (
 	"fmt"
-	"github.com/dalefeng/chat-api-reverse/global"
-	"github.com/dalefeng/chat-api-reverse/initialize"
+	"github.com/dalefengs/chat-api-proxy/global"
+	"github.com/dalefengs/chat-api-proxy/initialize"
 	"time"
 
 	"go.uber.org/zap"

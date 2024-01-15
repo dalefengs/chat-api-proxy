@@ -2,9 +2,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/dalefeng/chat-api-reverse/core/internal"
-	"github.com/dalefeng/chat-api-reverse/global"
-	"github.com/dalefeng/chat-api-reverse/utils"
+	"github.com/dalefengs/chat-api-proxy/core/internal"
+	"github.com/dalefengs/chat-api-proxy/global"
+	"github.com/dalefengs/chat-api-proxy/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"

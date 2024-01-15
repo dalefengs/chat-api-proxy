@@ -1,4 +1,4 @@
-module github.com/dalefeng/chat-api-reverse
+module github.com/dalefengs/chat-api-proxy
 
 go 1.21
 
@@ -14,6 +14,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+	github.com/pkg/errors v0.9.1
 	github.com/sashabaranov/go-openai v1.17.11
 	github.com/spf13/viper v1.18.2
 	github.com/swaggo/gin-swagger v1.3.0
@@ -57,7 +58,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect

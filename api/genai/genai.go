@@ -1,13 +1,13 @@
 package genai
 
 import (
-	"github.com/dalefeng/chat-api-reverse/global"
-	"github.com/dalefeng/chat-api-reverse/model/common/response"
-	genModel "github.com/dalefeng/chat-api-reverse/model/genai"
-	openModel "github.com/dalefeng/chat-api-reverse/model/openai"
-	"github.com/dalefeng/chat-api-reverse/pkg/adapter/event"
-	genaiAdapter "github.com/dalefeng/chat-api-reverse/pkg/adapter/genai"
-	"github.com/dalefeng/chat-api-reverse/utils"
+	"github.com/dalefengs/chat-api-proxy/global"
+	"github.com/dalefengs/chat-api-proxy/model/common/response"
+	genModel "github.com/dalefengs/chat-api-proxy/model/genai"
+	openModel "github.com/dalefengs/chat-api-proxy/model/openai"
+	"github.com/dalefengs/chat-api-proxy/pkg/adapter/event"
+	genaiAdapter "github.com/dalefengs/chat-api-proxy/pkg/adapter/genai"
+	"github.com/dalefengs/chat-api-proxy/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/sashabaranov/go-openai"

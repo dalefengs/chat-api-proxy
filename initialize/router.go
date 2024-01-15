@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"github.com/dalefeng/chat-api-reverse/global"
-	"github.com/dalefeng/chat-api-reverse/router"
+	"github.com/dalefengs/chat-api-proxy/global"
+	"github.com/dalefengs/chat-api-proxy/router"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

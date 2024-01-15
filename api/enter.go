@@ -1,9 +1,9 @@
 package api
 
 import (
-	"github.com/dalefeng/chat-api-reverse/api/copilot"
-	"github.com/dalefeng/chat-api-reverse/api/genai"
-	"github.com/dalefeng/chat-api-reverse/api/openai"
+	"github.com/dalefengs/chat-api-proxy/api/copilot"
+	"github.com/dalefengs/chat-api-proxy/api/genai"
+	"github.com/dalefengs/chat-api-proxy/api/openai"
 )
 
 type ApiGroup struct {

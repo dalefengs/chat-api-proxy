@@ -3,9 +3,9 @@ package openai
 import (
 	"bufio"
 	"fmt"
-	"github.com/dalefeng/chat-api-reverse/global"
-	"github.com/dalefeng/chat-api-reverse/model/common/response"
-	"github.com/dalefeng/chat-api-reverse/utils"
+	"github.com/dalefengs/chat-api-proxy/global"
+	"github.com/dalefengs/chat-api-proxy/model/common/response"
+	"github.com/dalefengs/chat-api-proxy/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	"io"

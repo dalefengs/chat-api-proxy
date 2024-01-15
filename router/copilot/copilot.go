@@ -1,7 +1,7 @@
 package copilot
 
 import (
-	"github.com/dalefeng/chat-api-reverse/api"
+	"github.com/dalefengs/chat-api-proxy/api"
 	"github.com/gin-gonic/gin"
 )
 

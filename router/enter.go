@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/dalefeng/chat-api-reverse/router/copilot"
-	"github.com/dalefeng/chat-api-reverse/router/genai"
-	"github.com/dalefeng/chat-api-reverse/router/openai"
+	"github.com/dalefengs/chat-api-proxy/router/copilot"
+	"github.com/dalefengs/chat-api-proxy/router/genai"
+	"github.com/dalefengs/chat-api-proxy/router/openai"
 )
 
 type Group struct {

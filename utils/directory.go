@@ -2,7 +2,7 @@ package utils
 
 import (
 	"errors"
-	"github.com/dalefeng/chat-api-reverse/global"
+	"github.com/dalefengs/chat-api-proxy/global"
 	"os"
 
 	"go.uber.org/zap"

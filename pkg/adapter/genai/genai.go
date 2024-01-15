@@ -3,9 +3,9 @@ package genai
 import (
 	"errors"
 	"fmt"
-	"github.com/dalefeng/chat-api-reverse/global"
-	genModel "github.com/dalefeng/chat-api-reverse/model/genai"
-	openModel "github.com/dalefeng/chat-api-reverse/model/openai"
+	"github.com/dalefengs/chat-api-proxy/global"
+	genModel "github.com/dalefengs/chat-api-proxy/model/genai"
+	openModel "github.com/dalefengs/chat-api-proxy/model/openai"
 	"github.com/gin-gonic/gin"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/google/uuid"

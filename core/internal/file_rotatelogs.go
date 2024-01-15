@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/dalefeng/chat-api-reverse/global"
+	"github.com/dalefengs/chat-api-proxy/global"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap/zapcore"
 	"os"

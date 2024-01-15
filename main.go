@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/dalefeng/chat-api-reverse/core"
-	"github.com/dalefeng/chat-api-reverse/global"
+	"github.com/dalefengs/chat-api-proxy/core"
+	"github.com/dalefengs/chat-api-proxy/global"
 )
 
 func main() {

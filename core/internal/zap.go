@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"github.com/dalefeng/chat-api-reverse/global"
+	"github.com/dalefengs/chat-api-proxy/global"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"time"
