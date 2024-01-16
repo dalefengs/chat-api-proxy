@@ -13,7 +13,7 @@ import (
 // Zap 获取 zap.Logger
 // Author [SliverHorn](https://github.com/SliverHorn)
 func Zap() (logger *zap.Logger) {
-	if ok, _ := utils.PathExists(global.Config.Zap.Director); !ok { // 判断是否有Director文件夹
+	if ok, _ := utils.PathDirExists(global.Config.Zap.Director); !ok { // 判断是否有Director文件夹
 		fmt.Printf("create %v directory\n", global.Config.Zap.Director)
 		_ = os.Mkdir(global.Config.Zap.Director, os.ModePerm)
 	}
