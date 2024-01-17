@@ -12,6 +12,7 @@ type ApiGroup struct {
 	copilot.CopilotApi
 	openai.OpenApi
 	genai.GenApi
+	Api
 }
 
 var ApiGroupApp = new(ApiGroup)
