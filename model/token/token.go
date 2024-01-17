@@ -19,7 +19,6 @@ type PoolTokenInfo struct {
 }
 
 type PoolModelInfo struct {
-	Name       string         `json:"name"`
 	Count      int            `json:"count"` // token 数量
 	Tokens     []TokenInfo    `json:"tokens"`
 	Index      int            `json:"index"`       // 当前使用的 token 索引

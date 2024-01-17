@@ -12,6 +12,7 @@ func (s *Router) InitTokenRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	tokenApi := token.TokenApi{}
 	{
 		baseRouter.POST("/pool", tokenApi.TokenPoolHandler)
+		baseRouter.GET("/info", tokenApi.TokenInfoHandler)
 	}
 	return baseRouter
 }

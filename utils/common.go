@@ -27,3 +27,17 @@ func Byte2Int(b []byte) int {
 func GetTokenCacheFilePath(token string) string {
 	return global.UserHomeCacheDir + "/" + token
 }
+
+// CopyStruct 深拷贝结构体
+func CopyStruct(dst, src interface{}) error {
+	var err error
+	jsonDst, err := global.Json.Marshal(dst)
+	if err != nil {
+		return err
+	}
+	err = global.Json.Unmarshal(jsonDst, src)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"github.com/dalefengs/chat-api-proxy/global"
+	"github.com/dalefengs/chat-api-proxy/model/common/response"
 	"github.com/dalefengs/chat-api-proxy/router"
 	"net/http"
 
@@ -26,7 +27,11 @@ func Routers() *gin.Engine {
 	Router.GET(global.Config.System.RouterPrefix+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	global.Log.Info("register swagger handler")
 
-	Router.Use(gin.Recovery())
+	Router.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
+		e := err.(error)
+		response.FailWithMessage(e.Error(), c)
+		return
+	}))
 	// 方便统一添加路由组前缀 多服务器上线使用
 
 	PublicGroup := Router.Group(global.Config.System.RouterPrefix)
