@@ -114,10 +114,10 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	if errors.Is(err, TokenExpiredError) {
 		CopilotTokenCache.Delete(token) // 删除缓存
 		global.SugarLog.Infow("CompletionsHandler token expired, try get new token", "token", token)
-		coCopilotToken, _, _, err := GetCopilotToken(token, true)
-		if err != nil {
-			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
-			response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
+		coCopilotToken, _, _, coErr := GetCopilotToken(token, true)
+		if coErr != nil {
+			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", coErr, "token", token)
+			response.FailWithOpenAIError(http.StatusUnauthorized, coErr.Error(), c)
 			return
 		}
 		global.SugarLog.Infow("CompletionsHandler http get token is success")
