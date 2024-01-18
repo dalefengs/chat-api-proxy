@@ -16,6 +16,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -25,6 +26,7 @@ import (
 
 var CopilotTokenCache *bigcache.BigCache
 var TokenExpiredError = errors.New("token expired")
+var Client = resty.New()
 
 func init() {
 	var err error
@@ -124,8 +126,12 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		err = CompletionsRequest(c, req, coCopilotToken)
 		if err != nil {
 			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
+			response.FailWithOpenAIError(http.StatusBadGateway, err.Error(), c)
 			return
 		}
+	} else if err != nil {
+		response.FailWithOpenAIError(http.StatusInternalServerError, err.Error(), c)
+		return
 	}
 }
 
@@ -151,8 +157,18 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 // CompletionsRequest 请求 Copilot CompletionsHandler 接口
 func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken string) (err error) {
 	url := global.Config.Copilot.CompletionsURL
-	client := resty.New()
-	resp, err := client.R().
+	resp, err := Client.SetRetryCount(1).R().
+		AddRetryCondition(func(r *resty.Response, err error) bool {
+			if err != nil && strings.Contains(err.Error(), "connection reset by peer") {
+				global.SugarLog.Warnw("CompletionsRequest Client connection reset by peer", "err", err.Error())
+			}
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
+				global.SugarLog.Warnw("CompletionsRequest Client timeout err, retry", "err", netErr.Error())
+				return true
+			}
+			return false
+		}).
 		SetDoNotParseResponse(true).
 		SetHeaders(GetCompletionsHeader(copilotToken)).
 		SetBody(req).
@@ -210,7 +226,6 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	data = make(map[string]interface{})
 	errDataMap := make(map[string]interface{})
 	httpCode = http.StatusInternalServerError
-	client := resty.New()
 	tokenUrl := global.Config.Copilot.TokenURL
 	if isCo {
 		tokenUrl = global.Config.Copilot.CoTokenURL
@@ -220,7 +235,15 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		global.SugarLog.Errorw("GetCopilotToken parse url error", "err", err, "tokenUrl", tokenUrl)
 		return
 	}
-	resp, err := client.R().
+	resp, err := Client.SetRetryCount(1).R().
+		AddRetryCondition(func(r *resty.Response, err error) bool {
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
+				global.SugarLog.Warnw("GetCopilotToken Client timeout err, retry", "err", netErr.Error())
+				return true
+			}
+			return false
+		}).
 		SetHeader("Host", u.Host).
 		SetHeader("Authorization", "token "+key).
 		SetHeader("Editor-Version", "vscode/1.85.0").
