@@ -3,18 +3,17 @@ FROM golang:alpine as builder
 WORKDIR /build
 COPY . .
 
+#RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache git
-
-RUN LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
 
 RUN go env -w GO111MODULE=on \
     && go env -w GOPROXY=https://goproxy.cn,direct \
     && go env -w CGO_ENABLED=0 \
     && go env \
     && go mod tidy \
-    && go build -ldflags "-X main.version=${LATEST_TAG}" -o server .
+    && go build -ldflags "-X main.version=$(git describe --tags `git rev-list --tags --max-count=1`)" -o server .
 
 FROM ubuntu:22.04
 
