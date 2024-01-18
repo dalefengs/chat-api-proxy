@@ -1,4 +1,4 @@
-package initialize
+package core
 
 import (
 	"github.com/dalefengs/chat-api-proxy/global"

@@ -11,5 +11,6 @@ func main() {
 	global.Viper = core.Viper()          // 初始化Viper
 	global.Log = core.Zap()              // 初始化zap日志库
 	global.SugarLog = global.Log.Sugar() // zap SugarLog
+	core.InitEnvironmentVar()
 	core.RunServer(version)
 }

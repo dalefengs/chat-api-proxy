@@ -3,7 +3,9 @@ FROM golang:alpine as builder
 WORKDIR /build
 COPY . .
 
-RUN apt-get update -y && apt-get upgrade -y && apt-get install git -y
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache git
 
 RUN LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
 
