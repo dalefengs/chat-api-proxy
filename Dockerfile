@@ -3,6 +3,8 @@ FROM golang:alpine as builder
 WORKDIR /build
 COPY . .
 
+RUN apt-get update -y && apt-get upgrade -y && apt-get install git -y
+
 RUN LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
 
 RUN go env -w GO111MODULE=on \
