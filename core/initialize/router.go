@@ -15,9 +15,7 @@ import (
 
 func Routers() *gin.Engine {
 	Router := gin.Default()
-	copilotRouter := router.GroupApp.Copilot
-	chatgptRouter := router.GroupApp.ChatGPT
-	geminiRouter := router.GroupApp.GeMini
+	routerApp := router.RouterApp
 	// Router.Use(middleware.LoadTls())  // 如果需要使用https 请打开此中间件 然后前往 core/server.go 将启动模式 更变为 Router.RunTLS("端口","你的cre/pem文件","你的key文件")
 	// 跨域，如需跨域可以打开下面的注释
 	// Router.Use(middleware.Cors()) // 直接放行全部跨域请求
@@ -41,10 +39,10 @@ func Routers() *gin.Engine {
 		})
 	}
 	{
-		copilotRouter.InitCopilotRouter(PublicGroup)
-		copilotRouter.InitCoCopilotRouter(PublicGroup)
-		chatgptRouter.InitChatGPTRouter(PublicGroup)
-		geminiRouter.InitGeminiRouter(PublicGroup)
+		routerApp.InitCopilotRouter(PublicGroup)
+		routerApp.InitCoCopilotRouter(PublicGroup)
+		routerApp.InitChatGPTRouter(PublicGroup)
+		routerApp.InitGeminiRouter(PublicGroup)
 	}
 	global.Log.Info("router register success")
 	return Router

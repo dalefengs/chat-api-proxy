@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//@author: [likfees](https://github.com/dalefengs)
+//@author: [dalefeng](https://github.com/dalefengs)
 //@function: PathDirExists
 //@description: 文件目录是否存在
 //@param: path string
@@ -46,7 +46,7 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-//@author: [likfees](https://github.com/dalefengs)
+//@author: [dalefeng](https://github.com/dalefengs)
 //@function: CreateDir
 //@description: 批量创建文件夹
 //@param: dirs ...string

@@ -2,12 +2,11 @@ package genai
 
 import (
 	"github.com/dalefengs/chat-api-proxy/global"
+	genModel "github.com/dalefengs/chat-api-proxy/model"
 	"github.com/dalefengs/chat-api-proxy/model/common/response"
-	genModel "github.com/dalefengs/chat-api-proxy/model/genai"
-	openModel "github.com/dalefengs/chat-api-proxy/model/openai"
 	"github.com/dalefengs/chat-api-proxy/pkg/adapter/event"
 	genaiAdapter "github.com/dalefengs/chat-api-proxy/pkg/adapter/genai"
-	"github.com/dalefengs/chat-api-proxy/utils"
+	"github.com/dalefengs/chat-api-proxy/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/sashabaranov/go-openai"
@@ -28,7 +27,7 @@ func (g *GenApi) CompletionsHandler(c *gin.Context) {
 		return
 	}
 
-	var req = &openModel.ChatCompletionRequest{}
+	var req = &genModel.ChatCompletionRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		response.FailWithOpenAIError(http.StatusBadRequest, err.Error(), c)
 		return

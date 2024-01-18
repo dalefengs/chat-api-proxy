@@ -1,13 +1,11 @@
-package copilot
+package router
 
 import (
 	"github.com/dalefengs/chat-api-proxy/api"
 	"github.com/gin-gonic/gin"
 )
 
-type Router struct{}
-
-func (s *Router) InitCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+func (r *Router) InitCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("copilot")
 	copilotApi := api.ApiGroupApp.CopilotApi
 	{
@@ -17,7 +15,7 @@ func (s *Router) InitCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	return baseRouter
 }
 
-func (s *Router) InitCoCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+func (r *Router) InitCoCopilotRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("cocopilot")
 	copilotApi := api.ApiGroupApp.CopilotApi
 	{

@@ -1,13 +1,11 @@
-package openai
+package router
 
 import (
 	"github.com/dalefengs/chat-api-proxy/api"
 	"github.com/gin-gonic/gin"
 )
 
-type Router struct{}
-
-func (s *Router) InitChatGPTRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+func (r *Router) InitChatGPTRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("")
 	openApi := api.ApiGroupApp.OpenApi
 	{

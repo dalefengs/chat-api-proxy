@@ -1,7 +1,7 @@
 package global
 
 import (
-	"github.com/dalefengs/chat-api-proxy/config"
+	"github.com/dalefengs/chat-api-proxy/global/config"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

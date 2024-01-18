@@ -1,13 +1,11 @@
-package genai
+package router
 
 import (
 	"github.com/dalefengs/chat-api-proxy/api/genai"
 	"github.com/gin-gonic/gin"
 )
 
-type Router struct{}
-
-func (s *Router) InitGeminiRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+func (r *Router) InitGeminiRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("gemini")
 	genApi := genai.GenApi{}
 	{

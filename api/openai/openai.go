@@ -6,7 +6,7 @@ import (
 	"github.com/dalefengs/chat-api-proxy/api/genai"
 	"github.com/dalefengs/chat-api-proxy/global"
 	"github.com/dalefengs/chat-api-proxy/model/common/response"
-	"github.com/dalefengs/chat-api-proxy/utils"
+	"github.com/dalefengs/chat-api-proxy/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	"io"

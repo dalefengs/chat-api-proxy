@@ -22,14 +22,10 @@ copilot:
   # cocopilot
   coTokenUrl: https://api.cocopilot.org/copilot_internal/v2/token
 
-openai:
-  baseUrl: https://chat.fungs.cn/proxy520
-
 gemini:
   # https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}
-  # https://api.gemini-chat.pro
   # https://api-gm.xfjy.in
   # https://gemini.baipiao.io
-  baseUrl: https://api-gm.xfjy.in
+  baseUrl: https://gemini.baipiao.io
   apiVersion: v1beta
 

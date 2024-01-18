@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dalefengs/chat-api-proxy/core/internal"
 	"github.com/dalefengs/chat-api-proxy/global"
-	"github.com/dalefengs/chat-api-proxy/utils"
+	"github.com/dalefengs/chat-api-proxy/pkg/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"

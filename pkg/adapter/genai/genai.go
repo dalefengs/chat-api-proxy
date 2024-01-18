@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dalefengs/chat-api-proxy/global"
-	genModel "github.com/dalefengs/chat-api-proxy/model/genai"
-	openModel "github.com/dalefengs/chat-api-proxy/model/openai"
+	genModel "github.com/dalefengs/chat-api-proxy/model"
 	"github.com/gin-gonic/gin"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/google/uuid"
@@ -17,7 +16,7 @@ import (
 )
 
 type GenAiModelAdapter interface {
-	GenerateStreamContent(ctx *gin.Context, req *openModel.ChatCompletionRequest) (<-chan string, error) // 流式生成内容
+	GenerateStreamContent(ctx *gin.Context, req *genModel.ChatCompletionRequest) (<-chan string, error) // 流式生成内容
 }
 
 type GeminiProModelAdapter struct {
@@ -30,7 +29,7 @@ func NewGeminiProModelAdapter(client *genai.Client) *GeminiProModelAdapter {
 }
 
 // GenerateStreamContent 流式生成内容
-func (g GeminiProModelAdapter) GenerateStreamContent(c *gin.Context, req *openModel.ChatCompletionRequest) (<-chan string, error) {
+func (g GeminiProModelAdapter) GenerateStreamContent(c *gin.Context, req *genModel.ChatCompletionRequest) (<-chan string, error) {
 	generativeModel := g.client.GenerativeModel(genModel.GeminiPro)
 	setGenAiModelByOpenaiRequest(generativeModel, req)
 	// Initialize the chat
@@ -74,7 +73,7 @@ func HandleStreamIter(genIter *genai.GenerateContentResponseIterator, dataChan c
 }
 
 // 设置 genai 模型参数
-func setGenAiModelByOpenaiRequest(model *genai.GenerativeModel, req *openModel.ChatCompletionRequest) {
+func setGenAiModelByOpenaiRequest(model *genai.GenerativeModel, req *genModel.ChatCompletionRequest) {
 	if req.MaxTokens != 0 {
 		model.MaxOutputTokens = &req.MaxTokens
 	}
@@ -105,7 +104,7 @@ func setGenAiModelByOpenaiRequest(model *genai.GenerativeModel, req *openModel.C
 }
 
 // 设置 genai 历史消息
-func setGenAiChatHistoryByOpenaiRequest(cs *genai.ChatSession, req *openModel.ChatCompletionRequest) {
+func setGenAiChatHistoryByOpenaiRequest(cs *genai.ChatSession, req *genModel.ChatCompletionRequest) {
 	cs.History = make([]*genai.Content, 0, len(req.Messages))
 	if len(req.Messages) > 1 {
 		for _, message := range req.Messages[:len(req.Messages)-1] {
@@ -154,13 +153,13 @@ func setGenAiChatHistoryByOpenaiRequest(cs *genai.ChatSession, req *openModel.Ch
 }
 
 // genai 转 openai 流式输出响应
-func genAiResponseToStreamCompletionResponse(genAiResp *genai.GenerateContentResponse, respID string, created int64) *openModel.CompletionResponse {
-	resp := openModel.CompletionResponse{
+func genAiResponseToStreamCompletionResponse(genAiResp *genai.GenerateContentResponse, respID string, created int64) *genModel.CompletionResponse {
+	resp := genModel.CompletionResponse{
 		ID:      fmt.Sprintf("chatcmpl-%s", respID),
 		Object:  "chat.completion.chunk",
 		Created: created,
 		Model:   genModel.GeminiPro,
-		Choices: make([]openModel.CompletionChoice, 0, len(genAiResp.Candidates)),
+		Choices: make([]genModel.CompletionChoice, 0, len(genAiResp.Candidates)),
 	}
 
 	for i, candidate := range genAiResp.Candidates {
@@ -171,7 +170,7 @@ func genAiResponseToStreamCompletionResponse(genAiResp *genai.GenerateContentRes
 			}
 		}
 
-		choice := openModel.CompletionChoice{
+		choice := genModel.CompletionChoice{
 			Index: i,
 		}
 		choice.Delta.Content = content
