@@ -11,7 +11,7 @@ func (r *Router) InitRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	{
 		baseRouter.GET("/copilot_internal/v2/token", copilotApi.CoTokenHandler)
 		baseRouter.POST("/v1/chat/completions", copilotApi.CompletionsHandler)
-		baseRouter.POST("/chat/completions", copilotApi.CompletionsHandler)
+		baseRouter.POST("/chat/completions", copilotApi.CompletionsOfficialHandler)
 	}
 	return baseRouter
 }

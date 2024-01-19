@@ -134,6 +134,30 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	}
 }
 
+// CompletionsOfficialHandler Copilot 的官方 CompletionsHandler 接口，使用官方token
+func (co *CopilotApi) CompletionsOfficialHandler(c *gin.Context) {
+	var req map[string]interface{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		global.SugarLog.Errorw("CompletionsOfficialHandler bind json err", "err", err)
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	token, err := utils.GetAuthToken(c, "Bearer")
+	if err != nil {
+		global.SugarLog.Errorw("CompletionsOfficialHandler get auth token err", "err", err.Error())
+		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
+		return
+	}
+	err = CompletionsRequest(c, req, token)
+	if err != nil {
+		global.SugarLog.Warnw("CompletionsOfficialHandler CompletionsRequest request error", "err", err)
+		response.FailWithOpenAIError(http.StatusInternalServerError, err.Error(), c)
+		return
+	}
+}
+
 // GetCopilotTokenWithCache 先从缓存中获取 CopilotToken，如果缓存中没有，再从 CoCopilot 获取
 func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 	cacheToken, cacheErr := CopilotTokenCache.Get(token)
