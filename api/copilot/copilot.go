@@ -98,7 +98,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
-		global.SugarLog.Errorw("CompletionsHandler get auth token err", "err", err)
+		global.SugarLog.Errorw("CompletionsHandler get auth token err", "err", err.Error())
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
@@ -109,9 +109,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
-	global.SugarLog.Infow("CompletionsHandler CompletionsRequest start")
 	err = CompletionsRequest(c, req, copilotToken)
-	global.SugarLog.Infow("CompletionsHandler CompletionsRequest end", "err", err)
 	// 如果 token 过期，重新获取一次 token
 	if errors.Is(err, TokenExpiredError) {
 		CopilotTokenCache.Delete(token) // 删除缓存
@@ -125,11 +123,12 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		global.SugarLog.Infow("CompletionsHandler http get token is success")
 		err = CompletionsRequest(c, req, coCopilotToken)
 		if err != nil {
-			global.SugarLog.Errorw("CompletionsHandler http fetch token, Try twice error", "err", err, "token", token)
+			global.SugarLog.Errorw("CompletionsHandler CompletionsRequest retry request error", "err", err)
 			response.FailWithOpenAIError(http.StatusBadGateway, err.Error(), c)
 			return
 		}
 	} else if err != nil {
+		global.SugarLog.Warnw("CompletionsHandler CompletionsRequest request error", "err", err)
 		response.FailWithOpenAIError(http.StatusInternalServerError, err.Error(), c)
 		return
 	}
@@ -139,7 +138,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 	cacheToken, cacheErr := CopilotTokenCache.Get(token)
 	if cacheErr != nil {
-		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr, "token", token)
+		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr.Error(), "token", token)
 		var tokenErr error
 		copilotToken, _, _, tokenErr = GetCopilotToken(token, true)
 		if tokenErr != nil {
@@ -149,7 +148,7 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 		}
 	} else {
 		copilotToken = string(cacheToken)
-		global.SugarLog.Infow("CompletionsHandler get cache success", "copilotToken", copilotToken)
+		global.SugarLog.Infow("CompletionsHandler get cache success")
 	}
 	return
 }
