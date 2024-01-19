@@ -6,7 +6,7 @@ import (
 )
 
 func (r *Router) InitChatGPTRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
-	baseRouter := Router.Group("")
+	baseRouter := Router.Group("openai")
 	openApi := api.ApiGroupApp.OpenApi
 	{
 		baseRouter.POST("v1/chat/completions", openApi.CompletionsHandler)

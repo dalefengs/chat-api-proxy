@@ -4,9 +4,7 @@ WORKDIR /build
 COPY . .
 
 #RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache git
+RUN apk add --no-cache git
 
 RUN go env -w GO111MODULE=on \
     && go env -w GOPROXY=https://goproxy.cn,direct \
