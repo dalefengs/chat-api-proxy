@@ -35,6 +35,8 @@ func Routers() *gin.Engine {
 		})
 	}
 	{
+		routerApp.InitRouter(PublicGroup)
+
 		routerApp.InitCopilotRouter(PublicGroup)
 		routerApp.InitCoCopilotRouter(PublicGroup)
 		routerApp.InitChatGPTRouter(PublicGroup)

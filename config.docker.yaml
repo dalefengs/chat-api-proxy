@@ -4,7 +4,7 @@ system:
   router-prefix: "" # 路由前缀
 
 zap:
-  level: debug
+  level: info
   prefix: '[chat-api-proxy]'
   format: console
   director: log
