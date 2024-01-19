@@ -31,8 +31,8 @@ func RunServer(version string) {
 =  OS:          %s
 =  Golang:      %s
 =  Version:     %s
-=  Bind:        http://127.0.0.1:%s/
+=  Bind:        http://127.0.0.1:%d/
 =
-================================================================================`+"\n", runtime.GOOS, runtime.Version(), version, port)
+================================================================================`+"\n", runtime.GOOS, runtime.Version(), version, global.Config.System.Port)
 	global.Log.Error(s.ListenAndServe().Error())
 }
