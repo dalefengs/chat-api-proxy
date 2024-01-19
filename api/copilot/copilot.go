@@ -152,7 +152,7 @@ func (co *CopilotApi) CompletionsOfficialHandler(c *gin.Context) {
 	}
 	err = CompletionsRequest(c, req, token)
 	if err != nil {
-		global.SugarLog.Warnw("CompletionsOfficialHandler CompletionsRequest request error", "err", err)
+		global.SugarLog.Warnw("CompletionsOfficialHandler CompletionsRequest request error", "err", err, "token", token)
 		response.FailWithOpenAIError(http.StatusInternalServerError, err.Error(), c)
 		return
 	}
