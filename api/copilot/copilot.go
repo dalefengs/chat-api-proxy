@@ -284,7 +284,20 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 	if httpCode != http.StatusOK {
 		global.SugarLog.Errorw("GetCopilotToken httpCode!== 200", "statusCode", httpCode, "key", key, "errDataMap", errDataMap)
 		data = errDataMap
-		err = fmt.Errorf("get copilot token error, %s", errDataMap["message"])
+		msg := strings.Builder{}
+		if message, ok := errDataMap["message"]; ok && message != nil {
+			msg.WriteString("message: ")
+			msg.WriteString(message.(string))
+		}
+		if detail, ok := errDataMap["error_details"]; ok && detail != nil {
+			detailMap := detail.(map[string]any)
+			message := detailMap["message"]
+			if message != nil {
+				msg.WriteString(" error_message: ")
+				msg.WriteString(message.(string))
+			}
+		}
+		err = fmt.Errorf("get copilot token error, %s", msg.String())
 		return
 	}
 	t, ok := data["token"]
