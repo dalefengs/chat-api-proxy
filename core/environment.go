@@ -19,4 +19,7 @@ func InitEnvironmentVar() {
 	if env := os.Getenv("GEMINI_VERSION"); env != "" {
 		global.Config.Gemini.ApiVersion = env
 	}
+	if env := os.Getenv("CO_TOKEN_URL"); env != "" {
+		global.Config.Copilot.CoTokenURL = env
+	}
 }
