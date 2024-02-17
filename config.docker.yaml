@@ -20,7 +20,7 @@ copilot:
   completionsUrl: https://api.githubcopilot.com/chat/completions
 
   # cocopilot
-  coTokenUrl: https://api.cocopilot.org/copilot_internal/v2/token
+  coTokenUrl: https://api.cocopilot.net/copilot_internal/v2/token
 
 gemini:
   # https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}
