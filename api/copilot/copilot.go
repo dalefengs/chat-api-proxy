@@ -89,6 +89,12 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		return
 	}
 
+	// 默认流式输出
+	isStream := true
+	if b, ok := req["stream"]; ok && b == false {
+		isStream = false
+	}
+
 	if model, ok := req["model"]; ok && model == "gemini-pro" || model == openai.GPT432K {
 		global.SugarLog.Debugw("CompletionsHandler gemini-pro model", "model", model)
 		genApi := &genai.GenApi{}
@@ -109,7 +115,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
-	err = CompletionsRequest(c, req, copilotToken)
+	err = CompletionsRequest(c, req, isStream, copilotToken)
 	// 如果 token 过期，重新获取一次 token
 	if errors.Is(err, TokenExpiredError) {
 		CopilotTokenCache.Delete(token) // 删除缓存
@@ -121,7 +127,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 			return
 		}
 		global.SugarLog.Infow("CompletionsHandler http get token is success")
-		err = CompletionsRequest(c, req, coCopilotToken)
+		err = CompletionsRequest(c, req, isStream, coCopilotToken)
 		if err != nil {
 			global.SugarLog.Errorw("CompletionsHandler CompletionsRequest retry request error", "err", err)
 			response.FailWithOpenAIError(http.StatusBadGateway, err.Error(), c)
@@ -144,13 +150,19 @@ func (co *CopilotApi) CompletionsOfficialHandler(c *gin.Context) {
 		return
 	}
 
+	// 默认流式输出
+	isStream := true
+	if b, ok := req["stream"]; ok && b == false {
+		isStream = false
+	}
+
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
 		global.SugarLog.Errorw("CompletionsOfficialHandler get auth token err", "err", err.Error())
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
-	err = CompletionsRequest(c, req, token)
+	err = CompletionsRequest(c, req, isStream, token)
 	if err != nil {
 		global.SugarLog.Warnw("CompletionsOfficialHandler CompletionsRequest request error", "err", err, "token", token)
 		response.FailWithOpenAIError(http.StatusInternalServerError, err.Error(), c)
@@ -178,16 +190,16 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 }
 
 // CompletionsRequest 请求 Copilot CompletionsHandler 接口
-func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken string) (err error) {
+func CompletionsRequest(c *gin.Context, req map[string]interface{}, isStream bool, copilotToken string) (err error) {
 	url := global.Config.Copilot.CompletionsURL
 	resp, err := Client.SetRetryCount(1).R().
 		AddRetryCondition(func(r *resty.Response, err error) bool {
 			if err != nil && strings.Contains(err.Error(), "connection reset by peer") {
-				global.SugarLog.Warnw("CompletionsRequest Client connection reset by peer", "err", err.Error())
+				global.SugarLog.Warnw("CompletionsRequest Client connection reset by peer", "stream", isStream, "err", err.Error())
 			}
 			var netErr net.Error
 			if errors.As(err, &netErr) && netErr.Timeout() {
-				global.SugarLog.Warnw("CompletionsRequest Client timeout err, retry", "err", netErr.Error())
+				global.SugarLog.Warnw("CompletionsRequest Client timeout err, retry", "stream", isStream, "err", netErr.Error())
 				return true
 			}
 			return false
@@ -207,34 +219,48 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 
 	respContentType := resp.Header().Get("Content-Type")
 	if resp.StatusCode() != http.StatusOK {
-		global.SugarLog.Warnw("CompletionsRequest respContentType", "respContentType", respContentType, "statusCode", resp.StatusCode())
+		global.SugarLog.Warnw("CompletionsRequest respContentType", "respContentType", respContentType, "stream", isStream, "statusCode", resp.StatusCode())
 	}
 
 	if strings.Contains(respContentType, "text/plain") {
 		body, err := io.ReadAll(reader)
 		if err != nil {
-			global.SugarLog.Errorw("CompletionsHandler reader body err", "err", err)
+			global.SugarLog.Errorw("CompletionsHandler reader body err", "stream", isStream, "err", err)
 			return err
 		}
 		bodyStr := strings.TrimRight(string(body), "\n")
 		if bodyStr == "unauthorized: token expired" {
-			global.SugarLog.Errorw("CompletionsHandler token expired", "body", bodyStr)
+			global.SugarLog.Errorw("CompletionsHandler token expired", "stream", isStream, "body", bodyStr)
 			return TokenExpiredError
 		}
-		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr, "copilotToken", copilotToken)
+		global.SugarLog.Infow("CompletionsHandler response error", "stream", isStream, "body", bodyStr, "copilotToken", copilotToken)
 		response.FailWithOpenAIError(resp.StatusCode(), bodyStr, c)
 		return nil
 	}
 
-	utils.SetEventStreamHeaders(c)
 	w := c.Writer
+	// 非流式输出
+	if !isStream {
+		utils.SetEventStreamHeaders(c)
+		flusher, _ := w.(http.Flusher)
+		body, readErr := io.ReadAll(reader)
+		if readErr != nil {
+			global.SugarLog.Errorw("CompletionsHandler reader body err", "stream", isStream, "err", readErr)
+			return readErr
+		}
+		w.Write(body)
+		flusher.Flush()
+		return
+	}
+
+	utils.SetEventStreamHeaders(c)
 	flusher, _ := w.(http.Flusher)
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			global.SugarLog.Errorw("CompletionsHandler reader err", "err", err)
+			global.SugarLog.Errorw("CompletionsHandler reader err", "stream", isStream, "err", err)
 			break
 		}
 		w.Write(line)
