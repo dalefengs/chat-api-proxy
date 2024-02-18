@@ -241,7 +241,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, isStream boo
 	w := c.Writer
 	// 非流式输出
 	if !isStream {
-		utils.SetEventStreamHeaders(c)
+		utils.SetNotStreamHeaders(c)
 		flusher, _ := w.(http.Flusher)
 		body, readErr := io.ReadAll(reader)
 		if readErr != nil {
