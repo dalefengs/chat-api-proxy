@@ -91,7 +91,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 
 	// 默认流式输出
 	isStream := true
-	if b, ok := req["stream"]; ok && b == false {
+	if b, ok := req["stream"]; ok && b.(bool) == false {
 		isStream = false
 	}
 
@@ -152,7 +152,7 @@ func (co *CopilotApi) CompletionsOfficialHandler(c *gin.Context) {
 
 	// 默认流式输出
 	isStream := true
-	if b, ok := req["stream"]; ok && b == false {
+	if b, ok := req["stream"]; ok && b.(bool) == false {
 		isStream = false
 	}
 
