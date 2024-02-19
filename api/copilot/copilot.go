@@ -211,7 +211,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 	}
 
 	w := c.Writer
-
+	global.SugarLog.Infow("CompletionsRequest start of processor", "respContentType", respContentType, "statusCode", resp.StatusCode())
 	if strings.Contains(respContentType, "text/plain") { // 有错误信息
 		body, err := io.ReadAll(reader)
 		if err != nil {
@@ -226,7 +226,8 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		global.SugarLog.Infow("CompletionsHandler response error", "body", bodyStr, "copilotToken", copilotToken)
 		response.FailWithOpenAIError(resp.StatusCode(), bodyStr, c)
 		return nil
-	} else if strings.Contains(respContentType, "application/json") { // json 格式 非流式
+	}
+	if b, ok := req["stream"]; ok && b.(bool) == false { // json 格式 非流式
 		utils.SetJsonHeaders(c)
 		flusher, _ := w.(http.Flusher)
 		body, readErr := io.ReadAll(reader)
@@ -236,7 +237,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		}
 		w.Write(body)
 		flusher.Flush()
-		global.SugarLog.Infow("CompletionsRequest execute success, content type is json")
+		global.SugarLog.Infow("CompletionsRequest end of processor, stream is true")
 		return
 	}
 
@@ -253,7 +254,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		w.Write(line)
 		flusher.Flush()
 	}
-	global.SugarLog.Infow("CompletionsRequest execute success")
+	global.SugarLog.Infow("CompletionsRequest end of processor")
 	return
 }
 
