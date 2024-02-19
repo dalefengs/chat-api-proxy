@@ -35,9 +35,19 @@ func SetEventStreamHeaders(c *gin.Context) {
 	c.Writer.Header().Set("X-Accel-Buffering", "no") // // 禁用nginx缓存,防止nginx会缓存数据导致数据流是一段一段的
 }
 
-// SetNotStreamHeaders  设置非SSE的响应头
-func SetNotStreamHeaders(c *gin.Context) {
+// SetJsonHeaders  设置非SSE的响应头
+func SetJsonHeaders(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("Transfer-Encoding", "chunked")
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("X-Accel-Buffering", "no") // // 禁用nginx缓存,防止nginx会缓存数据导致数据流是一段一段的
+}
+
+// SetCustomHeaders  设置自定义的响应头
+func SetCustomHeaders(c *gin.Context, contentType string) {
+	c.Writer.Header().Set("Content-Type", contentType)
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")

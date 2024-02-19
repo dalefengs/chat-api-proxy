@@ -22,7 +22,7 @@ type GenApi struct {
 func (g *GenApi) CompletionsHandler(c *gin.Context) {
 	token, err := utils.GetAuthToken(c, "Bearer")
 	if err != nil {
-		global.SugarLog.Errorw("CompletionsHandler Get hearder token error", "error", err)
+		global.SugarLog.Errorw("CompletionsHandler Get header token error", "error", err)
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}

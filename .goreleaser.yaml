@@ -48,31 +48,31 @@ changelog:
       - go mod tidy
   groups:
     - title: ":arrow_up: Dependency updates" # 依赖更新
-      regexp: '^.*?(deps|arrow_up)(\([[:word:]]+\))??!?:.+$'
+      regexp: '^.*?(deps|:arrow_up)\(deps\)!?:.+$'
       order: 300
     - title: ":sparkles: Features" # 新功能： 例如，新功能、新页面、新组件等
-      regexp: '^.*?(feat|sparkles)(\([[:word:]]+\))??!?:.+$'
+      regexp: '^.*?(feat|:sparkles)(\([[:word:]]+\))??!?:.+$'
       order: 100
     - title: ":art: Refactor" # 重构： 例如，重构代码、格式化代码、移动文件等
-      regexp: '^.*?(refactor|art)(\([[:word:]]+\))??!?:.+$'
+      regexp: '^.*?(refactor|:art)(\([[:word:]]+\))??!?:.+$'
       order: 150
     - title: ":lock: Security updates" # 安全更新： 例如，添加安全头、更新 .gitignore、更新 .gitattributes 等
-      regexp: '^.*?sec(\([[:word:]]+\))??!?:.+$'
+      regexp: '^.*?(sec|:lock)(\([[:word:]]+\))??!?:.+$'
       order: 150
     - title: ":bug: Bug fixes" # 修复错误： 例如，修复 bug、修复拼写错误等
       regexp: '^.*?(fix|bug)(\([[:word:]]+\))??!?:.+$'
       order: 200
     - title: ":zap: Perf" # 优化相关，比如提升性能、体验。
-      regexp: '^.*?(perf|zap)(\([[:word:]]+\))??!?:.+$'
+      regexp: '^.*?(perf|:zap)(\([[:word:]]+\))??!?:.+$'
       order: 300
     - title: "Chore" # 杂务：通常用于描述其他不属于新功能、修复错误或重构代码的提交。 例如，更新文档、清理代码、更新依赖项、删除文件等
       regexp: '^.*?chore(\([[:word:]]+\))??!?:.+$'
       order: 300
-    - title: ":memo: Documentation updates" # 文档更新
-      regexp: ^.*?(doc|memo)(\([[:word:]]+\))??!?:.+$
+    - title: ":memo: Documentation updates"
+      regexp: ^.*?(doc|:memo)(\([[:word:]]+\))??!?:.+$
       order: 400
-    - title: ":lipstick: Style"  # 样式更新，页面优化
-      regexp: ^.*?(style|lipstick)(\([[:word:]]+\))??!?:.+$
+    - title: ":lipstick: Style"
+      regexp: ^.*?(style|:lipstick)(\([[:word:]]+\))??!?:.+$
       order: 400
     - title: "Build process updates"
       regexp: ^.*?build(\([[:word:]]+\))??!?:.+$
