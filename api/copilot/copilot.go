@@ -236,6 +236,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		}
 		w.Write(body)
 		flusher.Flush()
+		global.SugarLog.Infow("CompletionsRequest execute success, content type is json")
 		return
 	}
 
@@ -252,6 +253,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 		w.Write(line)
 		flusher.Flush()
 	}
+	global.SugarLog.Infow("CompletionsRequest execute success")
 	return
 }
 
