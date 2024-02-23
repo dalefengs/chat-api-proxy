@@ -2,10 +2,9 @@ package copilot
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
-	"github.com/allegro/bigcache/v3"
+	"github.com/coocood/freecache"
 	"github.com/dalefengs/chat-api-proxy/api/genai"
 	"github.com/dalefengs/chat-api-proxy/global"
 	"github.com/dalefengs/chat-api-proxy/model/common/response"
@@ -25,7 +24,7 @@ import (
 	"time"
 )
 
-var TokenCache *bigcache.BigCache
+var TokenCache *freecache.Cache
 var TokenExpiredError = errors.New("token expired")
 var Client = resty.New()
 
@@ -40,12 +39,8 @@ const (
 var AuthCount = make(map[string]map[StatisticsType]int)
 
 func init() {
-	var err error
-	TokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(23*time.Minute))
-	if err != nil {
-		log.Println("init CopilotTokenCache error ", err.Error())
-		panic(err)
-	}
+	cacheSize := 10 * 1024 * 1024 // 10M
+	TokenCache = freecache.NewCache(cacheSize)
 	log.Println("init CopilotTokenCache success")
 	go ClearAuthCount()
 }
@@ -61,6 +56,14 @@ func (co *CopilotApi) TokenHandler(c *gin.Context) {
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
+
+	tokenRawCache, err := GetTokenRawInfoCache(token)
+	if err == nil && len(tokenRawCache) > 0 {
+		global.SugarLog.Infow("TokenHandler get token raw cache", "token", token)
+		c.JSON(http.StatusOK, tokenRawCache)
+		return
+	}
+
 	_, respMap, httpStatus, err := GetCopilotToken(token, false)
 
 	c.Status(httpStatus)
@@ -80,6 +83,14 @@ func (co *CopilotApi) CoTokenHandler(c *gin.Context) {
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
+
+	tokenRawCache, err := GetTokenRawInfoCache(token)
+	if err == nil && len(tokenRawCache) > 0 {
+		global.SugarLog.Infow("CoTokenHandler get token raw cache", "token", token)
+		c.JSON(http.StatusOK, tokenRawCache)
+		return
+	}
+
 	_, respMap, httpStatus, err := GetCopilotToken(token, true)
 
 	c.Status(httpStatus)
@@ -126,7 +137,7 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 	err = CompletionsRequest(c, req, copilotToken)
 	// 如果 token 过期，重新获取一次 token
 	if errors.Is(err, TokenExpiredError) {
-		TokenCache.Delete(token) // 删除缓存
+		TokenCache.Del([]byte(token)) // 删除缓存
 		global.SugarLog.Infow("CompletionsHandler token expired, try get new token", "token", token)
 		coCopilotToken, _, _, coErr := GetCopilotToken(token, true)
 		if coErr != nil {
@@ -178,7 +189,7 @@ func (co *CopilotApi) CountHandler(c *gin.Context) {
 
 // GetCopilotTokenWithCache 先从缓存中获取 CopilotToken，如果缓存中没有，再从 CoCopilot 获取
 func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
-	cacheToken, cacheErr := TokenCache.Get(token)
+	cacheToken, cacheErr := TokenCache.Get([]byte(token))
 	if cacheErr != nil {
 		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr.Error(), "token", token)
 		var tokenErr error
@@ -192,6 +203,24 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 		IncAuthCount(TypeCacheToken)
 		copilotToken = string(cacheToken)
 		global.SugarLog.Infow("CompletionsHandler get cache success")
+	}
+	return
+}
+
+// GetTokenRawInfoCache 获取 token 的原始信息缓存
+func GetTokenRawInfoCache(token string) (respMap map[string]any, err error) {
+	tokenRawCache, err := TokenCache.Get([]byte(token + "_raw"))
+	if err != nil {
+		return
+	}
+	if tokenRawCache == nil {
+		global.SugarLog.Infow("GetTokenRawInfoCache token raw cache is nil", "token", token)
+		return
+	}
+	err = jsoniter.Unmarshal(tokenRawCache, &respMap)
+	if err != nil {
+		global.SugarLog.Errorw("GetTokenRawInfoCache get token raw cache json unmarshal error", "err", err)
+		return
 	}
 	return
 }
@@ -316,7 +345,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 
 	go func() {
 		jsonData, _ := jsoniter.MarshalIndent(AuthCount, "", "  ")
-		global.SugarLog.Infow("request statistics", "statistics", string(jsonData))
+		global.SugarLog.Infof("request statistics \n %s", string(jsonData))
 	}()
 	if err != nil {
 		global.SugarLog.Errorw("GetCopilotToken request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
@@ -354,10 +383,44 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		err = errors.New("response token is empty")
 		return
 	}
-	global.SugarLog.Infow("GetCopilotToken GetCopilotToken Success", "key", key)
-	cacheErr := TokenCache.Set(key, []byte(token))
+
+	expires := 700
+	expiresAt, ok := data["expires_at"]
+	var expiresTime string
+	if ok {
+		switch expiresAt.(type) {
+		case int, int64:
+			expiresAtInt := expiresAt.(int64)
+			if expiresAtInt > 0 {
+				expires = int(expiresAtInt - time.Now().Unix())
+				expiresTime = time.Unix(expiresAtInt, 0).Format("2006-01-02 15:04:05")
+			}
+		case float64:
+			expiresAtFloat := expiresAt.(float64)
+			if expiresAtFloat > 0 {
+				expires = int(int64(expiresAtFloat) - time.Now().Unix())
+				expiresTime = time.Unix(int64(expiresAtFloat), 0).Format("2006-01-02 15:04:05")
+			}
+		default:
+			expiresTime = "expiresAt type error"
+			global.SugarLog.Errorw("GetCopilotToken expires_at type error", "expiresAt", expiresAt)
+		}
+	}
+
+	global.SugarLog.Infow("GetCopilotToken HTTP Authorisation token success", "key", key, "expires", expires, "expiresTime", expiresTime)
+
+	cacheErr := TokenCache.Set([]byte(key), []byte(token), expires)
 	if cacheErr != nil {
-		global.SugarLog.Errorw("GetCopilotToken set cache err", "err", cacheErr)
+		global.SugarLog.Errorw("GetCopilotToken set token cache err", "err", cacheErr)
+	}
+	rawTokenInfo, err := jsoniter.Marshal(data)
+	if err != nil {
+		global.SugarLog.Errorw("GetCopilotToken token raw info json marshal error", "err", err)
+		return
+	}
+	cacheErr = TokenCache.Set([]byte(key+"_raw"), rawTokenInfo, expires)
+	if cacheErr != nil {
+		global.SugarLog.Errorw("GetCopilotToken set token raw cache err", "err", cacheErr)
 	}
 	return
 }
@@ -391,8 +454,6 @@ func IncAuthCount(authType StatisticsType) {
 		AuthCount[day][authType] = 0
 	}
 	AuthCount[day][authType]++
-	jsonData, _ := jsoniter.MarshalIndent(AuthCount, "", "  ")
-	global.SugarLog.Infof("request statistics \n %s", string(jsonData))
 }
 
 // ClearAuthCount 每天 0 点清空7天前统计数据
