@@ -24,13 +24,32 @@ import (
 	"time"
 )
 
-var CopilotTokenCache *bigcache.BigCache
+var TokenCache *bigcache.BigCache
 var TokenExpiredError = errors.New("token expired")
 var Client = resty.New()
 
+type StatisticsType string
+
+const (
+	TypeAuthToken   StatisticsType = "authToken"
+	TypeCacheToken  StatisticsType = "cacheToken"
+	TypeCompletions StatisticsType = "completions"
+)
+
+var AuthCount = make(map[string]map[StatisticsType]int)
+
+func IncAuthCount(authType StatisticsType) {
+	day := time.Now().Format("2006-01-02")
+	if _, ok := AuthCount[day]; !ok {
+		AuthCount[day] = make(map[StatisticsType]int)
+		AuthCount[day][authType] = 0
+	}
+	AuthCount[day][authType]++
+}
+
 func init() {
 	var err error
-	CopilotTokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(23*time.Minute))
+	TokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(23*time.Minute))
 	if err != nil {
 		log.Println("init CopilotTokenCache error ", err.Error())
 		panic(err)
@@ -109,10 +128,12 @@ func (co *CopilotApi) CompletionsHandler(c *gin.Context) {
 		response.FailWithOpenAIError(http.StatusUnauthorized, err.Error(), c)
 		return
 	}
+
+	IncAuthCount(TypeCompletions)
 	err = CompletionsRequest(c, req, copilotToken)
 	// 如果 token 过期，重新获取一次 token
 	if errors.Is(err, TokenExpiredError) {
-		CopilotTokenCache.Delete(token) // 删除缓存
+		TokenCache.Delete(token) // 删除缓存
 		global.SugarLog.Infow("CompletionsHandler token expired, try get new token", "token", token)
 		coCopilotToken, _, _, coErr := GetCopilotToken(token, true)
 		if coErr != nil {
@@ -158,9 +179,13 @@ func (co *CopilotApi) CompletionsOfficialHandler(c *gin.Context) {
 	}
 }
 
+func (co *CopilotApi) CountHandler(c *gin.Context) {
+	response.OkWithData(AuthCount, c)
+}
+
 // GetCopilotTokenWithCache 先从缓存中获取 CopilotToken，如果缓存中没有，再从 CoCopilot 获取
 func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
-	cacheToken, cacheErr := CopilotTokenCache.Get(token)
+	cacheToken, cacheErr := TokenCache.Get(token)
 	if cacheErr != nil {
 		global.SugarLog.Infow("CompletionsHandler get cache err, Try http fetch token", "err", cacheErr.Error(), "token", token)
 		var tokenErr error
@@ -171,6 +196,7 @@ func GetCopilotTokenWithCache(token string) (copilotToken string, err error) {
 			return
 		}
 	} else {
+		IncAuthCount(TypeCacheToken)
 		copilotToken = string(cacheToken)
 		global.SugarLog.Infow("CompletionsHandler get cache success")
 	}
@@ -183,6 +209,7 @@ func CompletionsRequest(c *gin.Context, req map[string]interface{}, copilotToken
 	resp, err := Client.SetRetryCount(1).R().
 		AddRetryCondition(func(r *resty.Response, err error) bool {
 			if err != nil && strings.Contains(err.Error(), "connection reset by peer") {
+				IncAuthCount(TypeCompletions)
 				global.SugarLog.Warnw("CompletionsRequest Client connection reset by peer", "err", err.Error())
 			}
 			var netErr net.Error
@@ -273,10 +300,12 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		global.SugarLog.Errorw("GetCopilotToken parse url error", "err", err, "tokenUrl", tokenUrl)
 		return
 	}
+	IncAuthCount(TypeAuthToken)
 	resp, err := Client.SetRetryCount(1).R().
 		AddRetryCondition(func(r *resty.Response, err error) bool {
 			var netErr net.Error
 			if errors.As(err, &netErr) && netErr.Timeout() {
+				IncAuthCount(TypeAuthToken)
 				global.SugarLog.Warnw("GetCopilotToken Client timeout err, retry", "err", netErr.Error())
 				return true
 			}
@@ -328,7 +357,7 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		return
 	}
 	global.SugarLog.Infow("GetCopilotToken GetCopilotToken Success", "key", key)
-	cacheErr := CopilotTokenCache.Set(key, []byte(token))
+	cacheErr := TokenCache.Set(key, []byte(token))
 	if cacheErr != nil {
 		global.SugarLog.Errorw("GetCopilotToken set cache err", "err", cacheErr)
 	}
@@ -343,7 +372,7 @@ func GetCompletionsHeader(token string) map[string]string {
 		"Accept-Encoding":             "gzip, deflate, br",
 		"Accept":                      "*/*",
 		"Authorization":               "Bearer " + token,
-		"X-Request-Id":                uid,
+		"X-RequestType-Id":            uid,
 		"X-Github-CopilotApi-Version": "2023-07-07",
 		"Vscode-Sessionid":            uid + strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10),
 		"vscode-machineid":            utils.GenHexStr(64),
