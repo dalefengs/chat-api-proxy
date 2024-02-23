@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/sashabaranov/go-openai"
 	"io"
 	"log"
@@ -38,15 +39,6 @@ const (
 
 var AuthCount = make(map[string]map[StatisticsType]int)
 
-func IncAuthCount(authType StatisticsType) {
-	day := time.Now().Format("2006-01-02")
-	if _, ok := AuthCount[day]; !ok {
-		AuthCount[day] = make(map[StatisticsType]int)
-		AuthCount[day][authType] = 0
-	}
-	AuthCount[day][authType]++
-}
-
 func init() {
 	var err error
 	TokenCache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(23*time.Minute))
@@ -55,6 +47,7 @@ func init() {
 		panic(err)
 	}
 	log.Println("init CopilotTokenCache success")
+	go ClearAuthCount()
 }
 
 type CopilotApi struct {
@@ -320,6 +313,11 @@ func GetCopilotToken(key string, isCo bool) (token string, data map[string]inter
 		SetResult(&data).
 		SetError(&errDataMap).
 		Get(tokenUrl)
+
+	go func() {
+		jsonData, _ := jsoniter.MarshalIndent(AuthCount, "", "  ")
+		global.SugarLog.Infow("request statistics", "statistics", string(jsonData))
+	}()
 	if err != nil {
 		global.SugarLog.Errorw("GetCopilotToken request http error", "err", err, "url", global.Config.Copilot.CoTokenURL, "key", key)
 		return
@@ -384,4 +382,38 @@ func GetCompletionsHeader(token string) map[string]string {
 		"User-Agent":                  "GitHubCopilotChat/0.11.1",
 	}
 	return headersMap
+}
+
+func IncAuthCount(authType StatisticsType) {
+	day := time.Now().Format("2006-01-02")
+	if _, ok := AuthCount[day]; !ok {
+		AuthCount[day] = make(map[StatisticsType]int)
+		AuthCount[day][authType] = 0
+	}
+	AuthCount[day][authType]++
+	jsonData, _ := jsoniter.MarshalIndent(AuthCount, "", "  ")
+	global.SugarLog.Infof("request statistics \n %s", string(jsonData))
+}
+
+// ClearAuthCount 每天 0 点清空7天前统计数据
+func ClearAuthCount() {
+	t := time.Now()
+	next := time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location())
+	d := next.Sub(t)
+
+	ticker := time.NewTicker(d)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			t := time.Now()
+			date := t.AddDate(0, 0, -7).Format("2006-01-02")
+			if _, ok := AuthCount[date]; ok {
+				delete(AuthCount, date)
+			}
+			global.SugarLog.Infow("ClearAuthCount success", "clearDay", date)
+			ticker.Reset(24 * time.Hour)
+		}
+	}
 }
