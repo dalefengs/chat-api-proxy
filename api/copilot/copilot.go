@@ -57,6 +57,15 @@ func (co *CopilotApi) TokenHandler(c *gin.Context) {
 		return
 	}
 
+	day := time.Now().Format("2006-01-02")
+	if dayCount, ok := AuthCount[day]; ok {
+		if authCount, ok := dayCount[TypeAuthToken]; ok && authCount > 200 {
+			global.SugarLog.Errorw("TokenHandler get auth token err,  authorization limit > 200")
+			response.FailWithOpenAIError(http.StatusUnauthorized, "exceeded authorization limit", c)
+			return
+		}
+	}
+
 	tokenRawCache, err := GetTokenRawInfoCache(token)
 	if err == nil && len(tokenRawCache) > 0 {
 		global.SugarLog.Infow("TokenHandler get token raw cache", "token", token)
