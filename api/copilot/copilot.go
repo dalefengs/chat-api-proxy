@@ -490,9 +490,12 @@ func ClearAuthCount() {
 
 var pacContent string
 var pacTpl = `function FindProxyForURL(url, host) {
-	if (host == 'githubusercontent.com' || host == 'githubcopilot.com' || host == 'cocopilot.net' || host == 'google.com') {
-		return '%s'
-	}
+    if (host.indexOf('githubusercontent.com') != -1 || 
+        host.indexOf('githubcopilot.com') != -1 || 
+        host.indexOf('cocopilot.net') != -1 || 
+        host.indexOf('google.com') != -1) {
+        return 'PROXY 代理服务器地址:端口'; // 请替换'代理服务器地址:端口'为你的代理服务器地址和端口
+    }
 	return 'DIRECT'
 }
 `
