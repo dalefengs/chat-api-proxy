@@ -21,7 +21,11 @@ copilot:
 
   # cocopilot
   coTokenUrl: https://api.cocopilot.net/copilot_internal/v2/token
+  proxy:
+    HTTP: ""
+    HTTPS: ""
 
+    
 gemini:
   # https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}
   # https://api-gm.xfjy.in

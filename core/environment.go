@@ -22,4 +22,10 @@ func InitEnvironmentVar() {
 	if env := os.Getenv("CO_TOKEN_URL"); env != "" {
 		global.Config.Copilot.CoTokenURL = env
 	}
+	if env := os.Getenv("HTTP_PROXY"); env != "" {
+		global.Config.Copilot.Proxy.HTTP = env
+	}
+	if env := os.Getenv("HTTPS_PROXY"); env != "" {
+		global.Config.Copilot.Proxy.HTTPS = env
+	}
 }

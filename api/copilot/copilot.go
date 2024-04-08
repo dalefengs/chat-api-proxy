@@ -478,3 +478,31 @@ func ClearAuthCount() {
 		}
 	}
 }
+
+var pacContent string
+var pacTpl = `function FindProxyForURL(url, host) {
+	if (host == 'githubusercontent.com' || host == 'githubcopilot.com' || host == 'cocopilot.net' || host == 'google.com') {
+		return '%s'
+	}
+	return 'DIRECT'
+}
+`
+var directPac = `function FindProxyForURL(url, host) {
+	return 'DIRECT'
+}
+`
+
+func (co *CopilotApi) ProxyPacHandler(ctx *gin.Context) {
+	proxy := global.Config.Copilot.Proxy.HTTP
+	if pacContent == "" && proxy != "" {
+		pacContent = fmt.Sprintf(pacTpl, proxy)
+	}
+	if pacContent == "" {
+		pacContent = directPac
+	}
+	if proxy != "" && pacContent == directPac {
+		pacContent = fmt.Sprintf(pacTpl, proxy)
+	}
+	ctx.Header("Content-Type", "application/x-ns-proxy-autoconfig")
+	ctx.String(http.StatusOK, pacContent)
+}
