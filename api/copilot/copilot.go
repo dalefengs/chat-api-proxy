@@ -494,7 +494,7 @@ var pacTpl = `function FindProxyForURL(url, host) {
         host.indexOf('githubcopilot.com') != -1 || 
         host.indexOf('cocopilot.net') != -1 || 
         host.indexOf('google.com') != -1) {
-        return 'arm-kr.fjiabinc.top:9998'
+        return '%s'
     }
 	return 'DIRECT'
 }
