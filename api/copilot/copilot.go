@@ -493,8 +493,7 @@ var pacTpl = `function FindProxyForURL(url, host) {
     if (shExpMatch(host,'githubusercontent.com') || 
         shExpMatch(host, "*githubcopilot.com*") || 
         shExpMatch(host, "*cocopilot.net*") || 
-        shExpMatch(host, "*fungs.cn*") || 
-        shExpMatch(host, "*google.com*")) {
+        shExpMatch(host, "*fungs.cn*")) {
         return 'PROXY %s'
     }
 	return 'DIRECT'
