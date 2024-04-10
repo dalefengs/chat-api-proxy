@@ -495,7 +495,7 @@ var pacTpl = `function FindProxyForURL(url, host) {
         shExpMatch(host, "*cocopilot.net*") || 
         shExpMatch(host, "*fungs.cn*") || 
         shExpMatch(host, "*google.com*")) {
-        return 'PROXY arm-kr.fjiabinc.top:9998'
+        return 'PROXY %s'
     }
 	return 'DIRECT'
 }
