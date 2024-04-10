@@ -490,11 +490,12 @@ func ClearAuthCount() {
 
 var pacContent string
 var pacTpl = `function FindProxyForURL(url, host) {
-    if (host.indexOf('githubusercontent.com') != -1 || 
-        host.indexOf('githubcopilot.com') != -1 || 
-        host.indexOf('cocopilot.net') != -1 || 
-        host.indexOf('google.com') != -1) {
-        return '%s'
+    if (shExpMatch(host,'githubusercontent.com') || 
+        shExpMatch(host, "*githubcopilot.com*") || 
+        shExpMatch(host, "*cocopilot.net*") || 
+        shExpMatch(host, "*fungs.cn*") || 
+        shExpMatch(host, "*google.com*")) {
+        return 'PROXY arm-kr.fjiabinc.top:9998'
     }
 	return 'DIRECT'
 }

@@ -1,8 +1,7 @@
 module github.com/dalefengs/chat-api-proxy
 
-go 1.21
+go 1.18
 
-toolchain go1.21.0
 
 require (
 	github.com/coocood/freecache v1.2.4
